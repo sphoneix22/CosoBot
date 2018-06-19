@@ -1,0 +1,3 @@
+discord.py
+rls-sdk
+steam
