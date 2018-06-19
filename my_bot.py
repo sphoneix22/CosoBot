@@ -64,11 +64,16 @@ async def rocket(context):
     razzo = rls.rocket.RocketLeague(ROCKET_LEAGUE_API_KEY)
     try:
         giocatore = razzo.players.player(id=id_64, platform=1).json()
-        await client.say(f"{giocatore['displayName']} ha vinto {giocatore['stats']['wins']} partite,"
-                         f"segnando {giocatore['stats']['goals']} goals, realizzando {giocatore['stats']['saves']}"
-                         f" parate e {giocatore['stats']['assists']} assist. {context.message.author.mention}")
+        em = discord.Embed(title='Rocket League Stats', colour=discord.Colour(2041),description=f"Statistiche di {giocatore['displayName']}" )
+        em.set_thumbnail(url="https://i.imgur.com/qqX4qjb.png")
+        em.add_field(name='Vittorie',value=giocatore['stats']['wins'],inline=True)
+        em.add_field(name='Goals',value=giocatore['stats']['goals'],inline=True)
+        em.add_field(name='Parate',value=giocatore['stats']['saves'],inline=True)
+        em.add_field(name='Assist',value=giocatore['stats']['assists'],inline=True)
+        await client.say(f"Ecco, {context.message.author.mention}.", embed=em)
     except:
-        await client.say(f"Giocatore non trovato, {context.message.author.mention}")
+        await client.say(f"Giocatore non trovato, {context.message.author.mention} \n ```rl_stats <custom_url>```")
+
 
 
 @client.command(name='rl_rank',
@@ -81,14 +86,16 @@ async def rocket_rank(context):
     razzo = rls.rocket.RocketLeague(ROCKET_LEAGUE_API_KEY)
     try:
         giocatore = razzo.players.player(id=id_64, platform=1).json()
-
-        await client.say(f"Rank di {giocatore['displayName']}:\n"
-                         f"__**1vs1**__ : {ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['10']['tier']]}, divisione {giocatore['rankedSeasons']['8']['10']['division']} :black_large_square: "
-                         f"**{giocatore['rankedSeasons']['8']['10']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up: \n"
-                         f"__**2vs2**__ : {ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['11']['tier']]}, divisione {giocatore['rankedSeasons']['8']['11']['division']} :black_large_square: "
-                         f" **{giocatore['rankedSeasons']['8']['11']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up: \n"
-                         f"__**3vs3**__ : {ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['13']['tier']]}, divisione {giocatore['rankedSeasons']['8']['13']['division']} :black_large_square: "
-                         f" **{giocatore['rankedSeasons']['8']['11']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up: \n ")
+        em = discord.Embed(title='Rocket League Ranks', colour=discord.Colour(2041),
+                           description=f"Statistiche di {giocatore['displayName']}")
+        em.set_thumbnail(url="https://i.imgur.com/qqX4qjb.png")
+        em.add_field(name='__1vs1__',value=f"{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['10']['tier']]} divisione {giocatore['rankedSeasons']['8']['10']['division']} \n"
+                                           f"**{giocatore['rankedSeasons']['8']['10']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up:",inline=True)
+        em.add_field(name='__2vs2__',value=f"{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['11']['tier']]} divisione {giocatore['rankedSeasons']['8']['11']['division']} \n"
+                                           f"**{giocatore['rankedSeasons']['8']['11']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up:",inline=True)
+        em.add_field(name='__3vs3__',value=f"{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['13']['tier']]} divisione {giocatore['rankedSeasons']['8']['13']['division']} \n"
+                                           f"**{giocatore['rankedSeasons']['8']['13']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up:",inline=True)
+        await client.say(f"Ecco, {context.message.author.mention}.", embed=em)
     except:
         await client.say(f"Giocatore non trovato, {context.message.author.mention}")
 
