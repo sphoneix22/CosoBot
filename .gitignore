@@ -3,3 +3,4 @@
 test.py
 secret.ini
 test_bot.py
+\__pycache__/
