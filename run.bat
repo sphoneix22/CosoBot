@@ -1,1 +1,1 @@
-python -i my_bot.py
+python -i cosobot.py
