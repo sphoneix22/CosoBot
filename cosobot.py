@@ -10,7 +10,7 @@ parser.read('secret.ini')  # Configparser read file
 
 BOT_PREFIX = ("?", "!", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler','cogs.chat','cogs.music']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler','cogs.chat','cogs.music','cogs.tournaments']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
