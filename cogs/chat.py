@@ -1,6 +1,12 @@
 import discord
 from discord.ext import commands
 
+risposte = {
+    'no': 'NO!',
+    'silvio': 'PALDINO!',
+    'altro che': 'IL FUTTBOOL, FUTTBOOOOL!!'
+}
+
 class Chat():
     def __init__(self, client):
         self.client = client
@@ -22,12 +28,10 @@ class Chat():
     async def on_message(self, ctx):
         if ctx.author.id != 457195507815546880:
             content = ctx.content.lower()
-            if content == 'no' or content == 'no!':
-                await ctx.channel.send('NO!')
-            elif content == 'silvio':
-                await ctx.channel.send('PALDINO!')
-            elif content == 'altro che':
-                await ctx.channel.send('IL FUTTBOOL, FUTTBOOOOL!!')
+            try:
+                await ctx.channel.send(risposte[content])
+            except KeyError:
+                return
 
     @commands.command(name='stop')
     @commands.has_role('CosoAdmin')
