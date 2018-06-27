@@ -28,15 +28,13 @@ class Tournaments():
                 url="https://challonge.com/assets/og-default-9d2c9e67cc219b24e19785afa8d289899116d96512f6096e67f04b854b2d174e.png")
             embed.set_footer(text="Powered by Challonge API",
                              icon_url="https://media.discordapp.net/attachments/258624439933992961/458288479864881152/COSOBOT.png")
-            i=0
-            for player in range(len(part)):
-                if part[i]['final-rank'] is None:
-                    embed.add_field(name=f"**{part[i]['name']}**",value="Posizione: Il torneo non è ancora terminato!",inline=True)
-                    i+=1
+            for player in part:
+                if player['final-rank'] is None:
+                    embed.add_field(name=f"**{player['name']}**",value="Posizione: Il torneo non è ancora terminato!",inline=True)
                 else:
-                    embed.add_field(name=f"**{part[i]['name']}**",value=f"Posizione finale: {part[i]['final-rank']}",inline=True)
-                    i+=1
+                    embed.add_field(name=f"**{player['name']}**",value=f"Posizione finale: {player['final-rank']}",inline=True)
         await ctx.channel.send(content=f"Ecco, {ctx.author.mention}", embed= embed)
+
 
 def setup(client):
     client.add_cog(Tournaments(bot=client))
