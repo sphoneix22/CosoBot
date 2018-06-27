@@ -3,7 +3,15 @@ from discord.ext import commands
 risposte = {
     'no': 'NO!',
     'silvio': 'PALDINO!',
-    'altro che': 'IL FUTTBOOL, FUTTBOOOOL!!'
+    'altro che': 'IL FUTTBOOL, FUTTBOOOOL!!',
+    'obunga': 'AARGHHH!!',
+    'acribisignanoluzzi':'tu puzzi',
+    'pino':'il veneziano',
+    'peppe':'compra la ps4',
+    'gerardo':'...Paldino, conosciuto anche come re di Luzzi, '
+              'nonchè governatore supremo e protettore della Terra '
+              'tramite le forze armate, è una rispettabilissima persona degna di tale riconoscimenti.',
+    'sphoneix' : 'Esperto di fantaciclismo'
 }
 
 class Chat():
@@ -38,6 +46,10 @@ class Chat():
         await ctx.send("Chiudendo il bot...")
         await self.client.logout()
 
+    @commands.command(name='github')
+    async def github(self,ctx):
+        await ctx.send(f"Tieni, {ctx.message.author.mention}. \n "
+                 f"https://github.com/sphoneix22/CosoBot")
 
 def setup(client):
     client.add_cog(Chat(client))
