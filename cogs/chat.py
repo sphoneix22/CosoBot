@@ -1,5 +1,4 @@
 from discord.ext import commands
-
 risposte = {
     'no': 'NO!',
     'silvio': 'PALDINO!',
@@ -13,7 +12,6 @@ risposte = {
                'tramite le forze armate, è una rispettabilissima persona degna di tale riconoscimenti.',
     'sphoneix': 'Esperto di fantaciclismo'
 }
-
 
 class Chat():
     def __init__(self, client):
@@ -29,9 +27,9 @@ class Chat():
         await ctx.message.delete()
         if guild == 'Serverino bellino & Bananen':
             await ctx.send(f" {teodoro} {teodoro} {teodoro} Hey @everyone! "
-                           f"Qui c'è qualcuno che vuole parlare! {teodoro} {teodoro} {teodoro}")
+                           f"{ctx.message.author.mention} vuole parlare! {teodoro} {teodoro} {teodoro}")
         else:
-            await ctx.send("Hey @everyone! Qui c'è qualcuno che vuole parlare!")
+            await ctx.send(f"Hey @everyone! {ctx.message.author.mention} vuole parlare!")
 
     async def on_message(self, ctx):
         if ctx.author.id != 457195507815546880:
