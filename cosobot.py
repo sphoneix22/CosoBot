@@ -39,7 +39,8 @@ async def game():
                         'Facciamo un torneo?',
                         'Emacor fa schifo',
                         'Viva Brawlhalla',
-                        'Il mio padrone è il migliore']
+                        'Il mio padrone è il migliore',
+                        'Col Raspberry']
         await client.change_presence(activity=(discord.Game(random.choice(playing_list))))
         await asyncio.sleep(1000)
 
