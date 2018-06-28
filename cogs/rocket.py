@@ -1,8 +1,9 @@
-from discord.ext import commands
+import configparser
+
+import discord
 import rls.rocket
 import steam
-import discord
-import configparser
+from discord.ext import commands
 
 parser = configparser.ConfigParser()
 parser.read('secret.ini')
@@ -44,8 +45,8 @@ class Rocket():
                 await ctx.send(f"Giocatore non trovato, {ctx.message.author.mention}")
 
     @commands.command(name='rl_rank',
-                    description="Restituisce il ranking di RL durante l'attuale stagione",
-                    brief='Per vedere ranking RL')
+                      description="Restituisce il ranking di RL durante l'attuale stagione",
+                      brief='Per vedere ranking RL')
     async def rocket_rank(self, ctx):
         async with ctx.typing():
             custom_url = ctx.message.content[9:]

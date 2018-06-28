@@ -1,7 +1,8 @@
 from discord.ext import commands
 
+
 class CommandErrorHandler:
-    def __init__(self,client):
+    def __init__(self, client):
         self.client = client
 
     async def on_command_error(self, ctx, error):
@@ -24,6 +25,7 @@ class CommandErrorHandler:
         elif isinstance(error, commands.errors.CheckFailure):
             if ctx.command.qualified_name == 'stop':
                 return await ctx.send("Non hai il giusto ruolo per utilizzare questo comando. ```CosoAdmin```")
+
 
 def setup(client):
     client.add_cog(CommandErrorHandler(client))
