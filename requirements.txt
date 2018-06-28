@@ -1,3 +1,6 @@
-discord.py
+https://github.com/Rapptz/discord.py@rewrite
 rls-sdk
 steam
+http://github.com/russ-/pychallonge#egg=pychallonge
+configparser
+
