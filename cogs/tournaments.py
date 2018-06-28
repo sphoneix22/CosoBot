@@ -25,7 +25,7 @@ class Tournaments():
             part = challonge.participants.index(torneo)
             embed = discord.Embed(title=f"Partecipanti del torneo '{tourn['name']}' di {tourn['game-name']}",
                                   colour=discord.Colour(48942), url=tourn['full-challonge-url'],
-                                  timestamp=datetime.datetime.utcfromtimestamp(1529600734))
+                                  timestamp=(tourn['started-at']))
             embed.set_thumbnail(
                 url="https://challonge.com/assets/og-default-9d2c9e67cc219b24e19785afa8d289899116d96512f6096e67f04b854b2d174e.png")
             embed.set_footer(text="Powered by Challonge API",
