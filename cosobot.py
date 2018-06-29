@@ -2,7 +2,7 @@ import asyncio
 import random
 import time
 from configparser import ConfigParser
-
+from datetime import datetime
 import discord
 from discord.ext import commands
 
@@ -67,12 +67,14 @@ async def uptime(ctx):
     minute, second = divmod(tempo, 60)
     hour, minute = divmod(minute, 60)
     day, hour = divmod(hour, 24)
-    week, day = divmod(day, 7)
-    embed = discord.Embed(title='Bot attivo da:', description="{} settimane, {} giorni, "
+    embed = discord.Embed(title='Bot attivo da:', description="{} giorni, "
                                                               "{} ore, "
-                                                              "{} minuti, {} secondi".format(int(week), int(day),
-                                                                                             int(hour), int(minute),
-                                                                                             int(second)))
+                                                              "{} minuti, "
+                                                              "{} secondi".format(int(day),
+                                                                                    int(hour),
+                                                                                    int(minute),
+                                                                                    int(second)),
+                          timestamp=datetime.utcfromtimestamp(start_time))
     embed.set_footer(text='Last time started:', icon_url='https://png.icons8.com/color/1600/raspberry-pi.png')
     await ctx.send(embed=embed)
 
