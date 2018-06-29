@@ -1,4 +1,9 @@
+import time
+from datetime import datetime
+
+import discord
 from discord.ext import commands
+
 risposte = {
     'no': 'NO!',
     'silvio': 'PALDINO!',
@@ -12,6 +17,7 @@ risposte = {
                'tramite le forze armate, è una rispettabilissima persona degna di tale riconoscimenti.',
     'sphoneix': 'Esperto di fantaciclismo'
 }
+
 
 class Chat():
     def __init__(self, client):
@@ -51,6 +57,23 @@ class Chat():
     async def github(self, ctx):
         await ctx.send(f"Tieni, {ctx.message.author.mention}. \n "
                        f"https://github.com/sphoneix22/CosoBot")
+
+    @commands.command(name='uptime')
+    async def uptime(self, ctx):
+        elaps = time.time() - self.client.start_time
+        minute, second = divmod(elaps, 60)
+        hour, minute = divmod(minute, 60)
+        day, hour = divmod(hour, 24)
+        embed = discord.Embed(title='Bot attivo da:', description="{} giorni, "
+                                                                  "{} ore, "
+                                                                  "{} minuti, "
+                                                                  "{} secondi".format(int(day),
+                                                                                      int(hour),
+                                                                                      int(minute),
+                                                                                      int(second)),
+                              timestamp=datetime.utcfromtimestamp(self.client.start_time))
+        embed.set_footer(text='Last time started:', icon_url='https://png.icons8.com/color/1600/raspberry-pi.png')
+        await ctx.send(embed=embed)
 
 
 def setup(client):

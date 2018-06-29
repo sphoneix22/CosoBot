@@ -2,7 +2,6 @@ import asyncio
 import random
 import time
 from configparser import ConfigParser
-from datetime import datetime
 import discord
 from discord.ext import commands
 
@@ -24,9 +23,7 @@ def main():
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
-
-
-start_time = time.time()
+    client.start_time = time.time()
 
 
 @client.event
@@ -59,24 +56,6 @@ async def game():
                         'Col Raspberry']
         await client.change_presence(activity=(discord.Game(random.choice(playing_list))))
         await asyncio.sleep(1000)
-
-
-@client.command(name='uptime')
-async def uptime(ctx):
-    tempo = time.time() - start_time
-    minute, second = divmod(tempo, 60)
-    hour, minute = divmod(minute, 60)
-    day, hour = divmod(hour, 24)
-    embed = discord.Embed(title='Bot attivo da:', description="{} giorni, "
-                                                              "{} ore, "
-                                                              "{} minuti, "
-                                                              "{} secondi".format(int(day),
-                                                                                    int(hour),
-                                                                                    int(minute),
-                                                                                    int(second)),
-                          timestamp=datetime.utcfromtimestamp(start_time))
-    embed.set_footer(text='Last time started:', icon_url='https://png.icons8.com/color/1600/raspberry-pi.png')
-    await ctx.send(embed=embed)
 
 
 client.loop.create_task(servers())
