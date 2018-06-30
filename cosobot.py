@@ -1,16 +1,18 @@
 import asyncio
+import logging
 import random
 import time
 from configparser import ConfigParser
+
 import discord
 from discord.ext import commands
 
 parser = ConfigParser()  # Configparser start
 parser.read('secret.ini')  # Configparser read file
 
-BOT_PREFIX = ("?", "!", ',')
+BOT_PREFIX = (";",',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'test_music']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -23,7 +25,16 @@ def main():
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
+    logger()
     client.start_time = time.time()
+
+
+def logger():
+    logger_DEBUG = logging.getLogger('discord')
+    logger_DEBUG.setLevel(logging.DEBUG)
+    handler_DEBUG = logging.FileHandler(filename='./data/cache/debug.log', encoding='utf-8', mode='w')
+    handler_DEBUG.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger_DEBUG.addHandler(handler_DEBUG)
 
 
 @client.event
