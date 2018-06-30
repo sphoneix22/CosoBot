@@ -1,67 +1,23 @@
-from configparser import ConfigParser
-from discord.ext import commands
-import random
-import discord
 import asyncio
+import logging
+import random
 import time
+from configparser import ConfigParser
+
+import discord
+from discord.ext import commands
 
 parser = ConfigParser()  # Configparser start
 parser.read('secret.ini')  # Configparser read file
 
-BOT_PREFIX = ("?", "!", ',')
+BOT_PREFIX = (";",',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['rocket']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'test_music']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
 
-# EVENTS AT THE START
-@client.event  # Scrive su console i server in cui è online
-async def online():
-    await client.wait_until_ready()
-    while not client.is_closed:
-        print("Sono online su:")
-        for server in client.servers:
-            print(server.name)
-        print(time.strftime("%H:%M:%S"), '\n', time.strftime("%d-%m-%Y"))
-        print("---------------")
-        await asyncio.sleep(300)
-
-
-@client.event  # GAME AUTO
-async def playing_auto():
-    await client.wait_until_ready()
-    while not client.is_closed:
-        playing_list = ['Ma quanto è bello sto bot?',
-                        'Sono il migliore di tutti',
-                        'Sono troppo pro!',
-                        'Facciamo un torneo?',
-                        'Emacor fa schifo',
-                        'Viva Brawlhalla',
-                        'Il mio padrone è il migliore']
-        await client.change_presence(game=discord.Game(name=random.choice(playing_list)))
-        await asyncio.sleep(1000)
-
-
-# COMMANDS
-
-
-@client.command(name='teodoro',
-                description='Sveglia le persone sul server',
-                brief='TEODORO!',  # TEODORO WAKE UP
-                pass_context=True)
-@commands.cooldown(1, 120, commands.BucketType.server)
-async def teo(context):
-    teodoro = '<:teodoroemoji2:403218863967174667>'
-    server = str(context.message.server)
-    if server == 'Serverino bellino & Bananen':
-        await client.say(f" {teodoro} {teodoro} {teodoro} Hey @everyone! "
-                         f"Qui c'è qualcuno che vuole parlare! {teodoro} {teodoro} {teodoro}")
-    else:
-        await client.say("Hey @everyone! Qui c'è qualcuno che vuole parlare!")
-
-
-if __name__ == '__main__':
+def main():
     for extension in EXTENSION_LIST:
         try:
             client.load_extension(extension)
@@ -69,8 +25,54 @@ if __name__ == '__main__':
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
+    logger()
+    client.start_time = time.time()
 
-client.loop.create_task(playing_auto())  # LOOP STARTS COMMANDS
-client.loop.create_task(online())
+
+def logger():
+    logger_DEBUG = logging.getLogger('discord')
+    logger_DEBUG.setLevel(logging.DEBUG)
+    handler_DEBUG = logging.FileHandler(filename='./data/cache/debug.log', encoding='utf-8', mode='w')
+    handler_DEBUG.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger_DEBUG.addHandler(handler_DEBUG)
+
+
+@client.event
+async def servers():
+    await client.wait_until_ready()
+    while client.is_closed() is False:
+        print('Logged in as')
+        print(client.user.name)
+        print(client.user.id)
+        print('----------')
+        print('Sono online su:')
+        for server in client.guilds:
+            print(server.name)
+        print(time.strftime("%H:%M:%S"), '\n', time.strftime("%d-%m-%Y"))
+        print(" \n \n \n \n")
+        await asyncio.sleep(300)
+
+
+@client.event
+async def game():
+    await client.wait_until_ready()
+    while not client.is_closed():
+        playing_list = ['Ma quanto è bello sto bot?',
+                        'Sono il migliore di tutti',
+                        'Sono troppo pro!',
+                        'Facciamo un torneo?',
+                        'Emacor fa schifo',
+                        'Viva Brawlhalla',
+                        'Il mio padrone è il migliore',
+                        'Col Raspberry']
+        await client.change_presence(activity=(discord.Game(random.choice(playing_list))))
+        await asyncio.sleep(1000)
+
+
+client.loop.create_task(servers())
+client.loop.create_task(game())
+
+if __name__ == '__main__':
+    main()
 
 client.run(TOKEN)
