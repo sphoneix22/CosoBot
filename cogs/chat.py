@@ -45,7 +45,7 @@ class Chat():
             except KeyError:
                 return
 
-    @commands.command(name='stop')
+    @commands.command(name='chiudi')
     async def stop(self, ctx):
         if await self.client.is_owner(ctx.author):
             await ctx.send("Chiudendo il bot...")
