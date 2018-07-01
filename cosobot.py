@@ -40,10 +40,9 @@ def logger():
 
 
 def cleaner():
-    os.chdir("./data/cache/music")
-    file_list = [f for f in os.listdir("./")]
+    file_list = [f for f in os.listdir("./data/cache/music")]
     for f in file_list:
-        os.remove(f)
+        os.remove("./data/cache/music/{}".format(f))
 
 
 @client.event
