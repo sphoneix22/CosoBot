@@ -1,5 +1,5 @@
 from discord.ext import commands
-
+import youtube_dl
 
 class CommandErrorHandler:
     def __init__(self, client):
@@ -22,9 +22,9 @@ class CommandErrorHandler:
         elif isinstance(error, commands.errors.CommandOnCooldown):
             await ctx.send(f"Calmati! {ctx.message.author.mention}")
             return await ctx.message.delete()
-        elif isinstance(error, commands.errors.CheckFailure):
-            if ctx.command.qualified_name == 'stop':
-                return await ctx.send("Non hai il giusto ruolo per utilizzare questo comando. ```CosoAdmin```")
+        elif isinstance(error,youtube_dl.DownloadError):
+            if ctx.command.qualified_name == 'play':
+                await ctx.send("Wooops! C'è stato un errore nel download. Sei sicuro di aver scritto bene il link?")
 
 
 def setup(client):
