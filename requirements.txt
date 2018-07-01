@@ -3,4 +3,4 @@ rls-sdk
 steam
 http://github.com/russ-/pychallonge#egg=pychallonge
 configparser
-
+gitpython
