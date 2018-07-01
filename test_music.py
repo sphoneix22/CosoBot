@@ -17,7 +17,6 @@ ytdl_format_options = {
     'source_address': '0.0.0.0'
 }
 
-# TODO Creare qualcosa che elimina i vecchi file audio
 # TODO Creare queue
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
@@ -37,29 +36,33 @@ class Music():
 
     @commands.command(name='play')
     async def info(self, ctx):
-        if ctx.voice_client is not None:
-            vc = await ctx.voice_client.move_to(ctx.message.author.voice.channel)
+        if ctx.message.author.voice is not None:
+            url = ctx.message.content[6:]
+            source = await YTDL.from_url(url)
+            self.title = source[1]['title']
+            if ctx.voice_client is not None:
+                vc = await ctx.voice_client.move_to(ctx.message.author.voice.channel)
+            else:
+                vc = await ctx.message.author.voice.channel.connect()
+            await ctx.send("Ok, ora canto '**{}**', solo per te <3".format(self.title))
+            await vc.play(source[0])
         else:
-            vc = await ctx.message.author.voice.channel.connect()
-        url = ctx.message.content[6:]
-        source = await YTDL.from_url(url)
-        self.title = source[1]['title']
-        await ctx.send("Ok, ora canto '**{}**', solo per te <3".format(self.title))
-        await vc.play(source[0])
+            await ctx.send("Ma che vuoi? Entra in un canale idiota!")
 
-    @commands.command(name='stop')  # TODO Capire perchè sto coso non funziona
+    @commands.command(name='stop')
     async def stop(self, ctx):
         if ctx.voice_client.is_playing():
-            ctx.voice.disconnect()
+            await ctx.send("Ho chiuso **{}**".format(self.title))
+            await ctx.voice_client.disconnect(force=True)
         else:
-            ctx.send("Ma cosa vuoi?")
+            await ctx.send("Ma che vuoi? Sono zitto!")
 
     @commands.command(name='pause')
-    async def stop(self, ctx):
+    async def pause(self, ctx):
         if ctx.voice_client.is_playing():
             await ctx.send("Ho stoppato **{}**".format(self.title))
             await ctx.voice_client.pause()
-        else:
+        if not ctx.voice_client.is_playing():
             await ctx.send("Ma che vuoi? Sono zitto!")
 
     @commands.command(name='resume')
@@ -71,7 +74,6 @@ class Music():
             await ctx.voice_client.resume()
         else:
             await ctx.send("Così, a caso!")
-
 
 def setup(bot):
     bot.add_cog(Music(bot=bot))
