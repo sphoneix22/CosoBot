@@ -6,11 +6,12 @@ from configparser import ConfigParser
 
 import discord
 from discord.ext import commands
+from git import Repo
 
 parser = ConfigParser()  # Configparser start
 parser.read('secret.ini')  # Configparser read file
 
-BOT_PREFIX = (";",',')
+BOT_PREFIX = (";", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
 EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'test_music']
 
@@ -27,6 +28,7 @@ def main():
             print('Failed to load extension {}\n{}'.format(extension, exc))
     logger()
     client.start_time = time.time()
+    branch()
 
 
 def logger():
@@ -35,6 +37,11 @@ def logger():
     handler_DEBUG = logging.FileHandler(filename='./data/cache/debug.log', encoding='utf-8', mode='w')
     handler_DEBUG.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger_DEBUG.addHandler(handler_DEBUG)
+
+
+def branch():
+    repo = Repo('.')
+    client.version = repo.active_branch
 
 
 @client.event

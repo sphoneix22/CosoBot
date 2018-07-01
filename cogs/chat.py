@@ -75,6 +75,15 @@ class Chat():
         embed.set_footer(text='Last time started:', icon_url='https://png.icons8.com/color/1600/raspberry-pi.png')
         await ctx.send(embed=embed)
 
+    @commands.command(name='version')
+    async def version(self, ctx):
+        url = "https://www.github.com/sphoneix22/CosoBot/tree/{}".format(self.client.version)
+        versione = str(self.client.version)
+        embed = discord.Embed(title='Versione del bot:', description=f"**{versione}**", colour=discord.Colour(6897),
+                              url=url)
+        embed.set_footer(text='Powered by GitHub API', icon_url='https://i.imgur.com/kwrLuHE.png')
+        await ctx.send(embed=embed)
+
 
 def setup(client):
     client.add_cog(Chat(client))
