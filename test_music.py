@@ -1,6 +1,7 @@
 import discord
 import youtube_dl
 from discord.ext import commands
+import asyncio
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -27,25 +28,32 @@ class YTDL():
     async def from_url(cls, url):
         data = ytdl.extract_info(url=url)
         filename = ytdl.prepare_filename(data)
-        return discord.FFmpegPCMAudio("./{}".format(filename)), data
+        return discord.FFmpegPCMAudio(".\{}".format(filename)), data
 
 
 class Music():
     def __init__(self, bot):
         self.bot = bot
+        self.queue = []
 
     @commands.command(name='play')
     async def info(self, ctx):
         if ctx.message.author.voice is not None:
-            url = ctx.message.content[6:]
-            source = await YTDL.from_url(url)
-            self.title = source[1]['title']
-            if ctx.voice_client is not None:
-                vc = await ctx.voice_client.move_to(ctx.message.author.voice.channel)
-            else:
-                vc = await ctx.message.author.voice.channel.connect()
-            await ctx.send("Ok, ora canto '**{}**', solo per te <3".format(self.title))
-            await vc.play(source[0])
+            flag = asyncio.Event()
+            self.queue.append(ctx.message.content[6:])
+            while len(self.queue)>0:
+                source = await YTDL.from_url(self.queue[0])
+                self.data = source[1]
+                if ctx.voice_client is not None:
+                    vc = await ctx.voice_client.move_to(ctx.message.author.voice.channel)
+                else:
+                    vc = await ctx.message.author.voice.channel.connect()
+                await ctx.send("Ok, ora canto '**{}**', solo per te <3".format(self.data.get('title')))
+                flag.clear()
+                await vc.play(source[0],after=lambda e: self.bot.call_soon_threadsafe(flag.set()))
+                await flag.wait()
+                continue
+            await ctx.send("Coda terminata!")
         else:
             await ctx.send("Ma che vuoi? Entra in un canale idiota!")
 
