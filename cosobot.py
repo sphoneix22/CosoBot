@@ -6,12 +6,12 @@ import os
 import random
 import time
 from configparser import ConfigParser
-
+import os
 import discord
 from discord.ext import commands
 
-parser = ConfigParser()  # Configparser start
-parser.read('secret.ini')  # Configparser read file
+parser = ConfigParser()
+parser.read('{}/secret.ini'.format(os.getcwd()))
 
 BOT_PREFIX = (";", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
