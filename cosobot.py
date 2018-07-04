@@ -3,7 +3,7 @@ import logging
 import random
 import time
 from configparser import ConfigParser
-
+from os import name
 import discord
 from discord.ext import commands
 from git import Repo
@@ -13,7 +13,7 @@ parser.read('secret.ini')  # Configparser read file
 
 BOT_PREFIX = (";", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments','cogs.music']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -29,7 +29,13 @@ def main():
     logger()
     client.start_time = time.time()
     branch()
+    linux()
 
+def linux():
+    if name == 'nt':
+        client.linux = False
+    else:
+        client.linux = True
 
 def logger():
     logger_DEBUG = logging.getLogger('discord')

@@ -1,6 +1,7 @@
+import asyncio
 import time
 from datetime import datetime
-
+from subprocess import call
 import discord
 from discord.ext import commands
 
@@ -83,6 +84,24 @@ class Chat():
                               url=url)
         embed.set_footer(text='Powered by GitHub API', icon_url='https://i.imgur.com/kwrLuHE.png')
         await ctx.send(embed=embed)
+
+    @commands.command(name='reboot')
+    @commands.is_owner()
+    async def reboot(self,ctx):
+        if self.client.linux is True:
+            msg = await ctx.send("Questo comando riavvierà il Raspberry Pi! Sei sicuro?")
+            await msg.add_reaction('👍')
+            author = ctx.message.author
+            def check(reaction, user):
+                return user == author and str(reaction.emoji) == '👍'
+            try:
+                await self.client.wait_for('reaction_add',timeout=60,check=check)
+                await ctx.send("Ok, riavviando...")
+                call('reboot')
+            except asyncio.TimeoutError:
+                await ctx.send("Ok, non lo riavvio.")
+        else:
+            await ctx.send("Il bot si trova in ambiente Windows, non posso riavviarlo.")
 
 
 def setup(client):
