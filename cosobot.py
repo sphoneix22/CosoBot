@@ -1,8 +1,5 @@
-#!/usr/local/bin/python3.6
-
 import asyncio
 import logging
-import os
 import random
 import time
 from configparser import ConfigParser
@@ -15,7 +12,7 @@ parser.read('{}/secret.ini'.format(os.getcwd()))
 
 BOT_PREFIX = (";", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'test_music']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments','cogs.google']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
