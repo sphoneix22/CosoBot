@@ -1,6 +1,6 @@
-https://github.com/Rapptz/discord.py@rewrite
+iso8601
+git+https://github.com/Rapptz/discord.py@rewrite
 rls-sdk
 steam
-http://github.com/russ-/pychallonge#egg=pychallonge
-configparser
+git+http://github.com/russ-/pychallonge#egg=pychallonge
 gitpython
