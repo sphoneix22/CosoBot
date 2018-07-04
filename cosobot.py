@@ -1,5 +1,3 @@
-#!/usr/local/bin/python3.6
-
 import asyncio
 import logging
 import random
