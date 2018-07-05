@@ -17,7 +17,8 @@ class GID():
                 'output_directory': f"{os.getcwd()}/data/cache/images",
                 'no_directory': True,
                 'delay': 3,
-                'extract-metadata': True}
+                'extract-metadata': True,
+                'format':'jpg'}
         path = response.download(opts)
         return path
 
