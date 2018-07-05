@@ -25,7 +25,7 @@ class Google():
         self.bot = client
 
     @commands.command('image')
-    @commands.cooldown(2, 10, commands.BucketType.guild)
+    @commands.cooldown(2, 10, commands.BucketType.user)
     async def image(self, ctx):
         async with ctx.typing():
             query = ctx.message.content[7:]
