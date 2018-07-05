@@ -62,7 +62,7 @@ async def cleaner():
                 total_size += os.path.getsize(fp)
         return total_size
 
-    client.current_cache_size = await get_size(f"{os.getcwd()}/data/cache")
+    client.current_cache_size = get_size(f"{os.getcwd()}/data/cache")
     if client.current_cache_size > 500000000:
         await shutil.rmtree(f"{os.getcwd()}/data/cache/music")
         await shutil.rmtree(f"{os.getcwd()}/data/cache/images")
