@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import os
 import random
+import shutil
 import time
 from configparser import ConfigParser
 from os import name
@@ -8,12 +10,12 @@ import discord
 from discord.ext import commands
 from git import Repo
 
-parser = ConfigParser()  # Configparser start
-parser.read('secret.ini')  # Configparser read file
+parser = ConfigParser()
+parser.read('{}/secret.ini'.format(os.getcwd()))
 
 BOT_PREFIX = (";", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments','cogs.music']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -51,6 +53,23 @@ def branch():
 
 
 @client.event
+async def cleaner():
+    def get_size(path):
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+        return total_size
+
+    client.current_cache_size = await get_size(f"{os.getcwd()}/data/cache")
+    if client.current_cache_size > 500000000:
+        await shutil.rmtree(f"{os.getcwd()}/data/cache/music")
+        await shutil.rmtree(f"{os.getcwd()}/data/cache/images")
+    await asyncio.sleep(180)
+
+
+@client.event
 async def servers():
     await client.wait_until_ready()
     while client.is_closed() is False:
@@ -84,6 +103,7 @@ async def game():
 
 client.loop.create_task(servers())
 client.loop.create_task(game())
+client.loop.create_task(cleaner())
 
 if __name__ == '__main__':
     main()
