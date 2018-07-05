@@ -1,9 +1,11 @@
 import asyncio
 import logging
+import os
 import random
+import shutil
 import time
 from configparser import ConfigParser
-import os
+
 import discord
 from discord.ext import commands
 
@@ -12,7 +14,7 @@ parser.read('{}/secret.ini'.format(os.getcwd()))
 
 BOT_PREFIX = (";", ',')
 TOKEN = parser.get(section='secret', option='discord_token')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments','cogs.google']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -27,7 +29,6 @@ def main():
             print('Failed to load extension {}\n{}'.format(extension, exc))
     logger()
     client.start_time = time.time()
-    cleaner()
 
 
 def logger():
@@ -38,10 +39,21 @@ def logger():
     logger_DEBUG.addHandler(handler_DEBUG)
 
 
-def cleaner():
-    file_list = [f for f in os.listdir("./data/cache/music")]
-    for f in file_list:
-        os.remove("./data/cache/music/{}".format(f))
+@client.event
+async def cleaner():
+    def get_size(path):
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+        return total_size
+
+    client.current_cache_size = await get_size(f"{os.getcwd()}/data/cache")
+    if client.current_cache_size > 500000000:
+        await shutil.rmtree(f"{os.getcwd()}/data/cache/music")
+        await shutil.rmtree(f"{os.getcwd()}/data/cache/images")
+    await asyncio.sleep(180)
 
 
 @client.event
@@ -78,6 +90,7 @@ async def game():
 
 client.loop.create_task(servers())
 client.loop.create_task(game())
+client.loop.create_task(cleaner())
 
 if __name__ == '__main__':
     main()
