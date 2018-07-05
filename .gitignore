@@ -4,5 +4,4 @@ test.py
 secret.ini
 test_bot.py
 \__pycache__/
-
-data/cache/music/
+data/cache/
