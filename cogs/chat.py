@@ -26,7 +26,7 @@ class Chat():
     @commands.command(name='teodoro',
                       description='Sveglia le persone sul server',
                       brief='TEODORO!')
-    @commands.cooldown(1, 120, commands.BucketType.guild)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def teodoro(self, ctx):
         teodoro = '<:teodoroemoji2:403218863967174667>'
         guild = str(ctx.message.guild)
