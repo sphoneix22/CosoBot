@@ -63,7 +63,7 @@ class Google():
                                  icon_url='https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/1122px-Wikipedia-logo-v2.svg.png')
                 await ctx.send(embed=embed)
             except wikipedia.exceptions.DisambiguationError: #todo fix this shit
-                ctx.send("Qui c'è un errore di disambiguazione, al momento non riesco a risolverlo. Scusa se sono "
+                await ctx.send("Qui c'è un errore di disambiguazione, al momento non riesco a risolverlo. Scusa se sono "
                          "stupido :frowning:")
             except wikipedia.exceptions.PageError:
                 await ctx.send("Pagina non esistente.")
