@@ -1,6 +1,10 @@
-iso8601
 git+https://github.com/Rapptz/discord.py@rewrite
 rls-sdk
 steam
 git+http://github.com/russ-/pychallonge#egg=pychallonge
 gitpython
+google_image downloader
+wikipedia
+gspread
+youtube_dl
+oauth2client
