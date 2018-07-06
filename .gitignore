@@ -6,3 +6,5 @@ test_bot.py
 \__pycache__/
 data/cache/*
 !data/cache/.gitkeep
+google_secret.json
+
