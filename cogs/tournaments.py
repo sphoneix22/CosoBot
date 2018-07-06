@@ -1,12 +1,14 @@
 import configparser
-import datetime
+import gspread
 
 import challonge
 import discord
 from discord.ext import commands
+from oauth2client.service_account import ServiceAccountCredentials
+
 
 cf = configparser.ConfigParser()
-cf.read('secret.ini')
+cf.read("'secret.ini")
 
 
 class Tournaments():
@@ -38,6 +40,27 @@ class Tournaments():
                     embed.add_field(name=f"**{player['name']}**", value=f"Posizione finale: {player['final-rank']}",
                                     inline=True)
         await ctx.channel.send(content=f"Ecco, {ctx.author.mention}", embed=embed)
+
+    @commands.command(name='stats_tornei')
+    @commands.cooldown(1,60,commands.BucketType.user)
+    async def stats_tornei(self,ctx):
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('google_secret.json', scope)
+        client = gspread.authorize(creds)
+        sh = client.open('Tornei Brawlhalla').sheet1
+        embed = discord.Embed(title='Classifica tornei Brawlhalla',
+                              url='https://docs.google.com/spreadsheets/d/1q9Hr8qrAUVpdq5OyV1SF4b7n5C2j0QGQg-JXXSJ1B8s'
+                                  '/edit?usp=sharing',
+                              colour=discord.Colour(0x00ff07))
+        embed.set_footer(text='Powered by Google Drive API',icon_url='http://icons.iconarchive.com/icons'
+                                                                     '/marcus-roberto/google-play/128/Google-Drive-icon.png')
+        partecipanti = ['Emacor','Sphoneix','Giobitonto','Peppe','Alessandro']
+        for partecipante in partecipanti:
+            cell = sh.find(partecipante)
+            embed.add_field(name="**{}**".format(cell.value),value=f"Tornei vinti: {sh.cell(cell.row,2).value}",
+                            inline=True)
+        await ctx.send(embed=embed)
+
 
 
 def setup(client):
