@@ -10,20 +10,18 @@ import time
 from configparser import ConfigParser
 from os import name
 import discord
+
 from discord.ext import commands
 from git import Repo
 
-parser = ConfigParser()
-parser.read('{}/secret.ini'.format(os.getcwd()))
-
 BOT_PREFIX = (";", ',')
-TOKEN = parser.get(section='secret', option='discord_token')
 EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
 
 def main():
+    get_secret()
     cogs_loader()
     logger()
     client.start_time = time.time()
@@ -32,6 +30,10 @@ def main():
         exit(0)
     branch()
 
+def get_secret():
+    config = ConfigParser()
+    config.read('secret.ini')
+    client.secrets = dict(config.items('secret'))
 
 def get_flags():
     try:
@@ -126,4 +128,4 @@ client.loop.create_task(cleaner())
 if __name__ == '__main__':
     main()
 
-client.run(TOKEN)
+client.run(client.secrets['discord_token'])

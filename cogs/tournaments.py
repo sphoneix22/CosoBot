@@ -1,13 +1,9 @@
-import configparser
-
 import challonge
 import discord
 import gspread
 from discord.ext import commands
 from oauth2client.service_account import ServiceAccountCredentials
 
-cf = configparser.ConfigParser()
-cf.read("'secret.ini")
 
 partecipanti = ['Emacor', 'Sphoneix', 'Giobitonto', 'Peppe', 'Alessandro']
 

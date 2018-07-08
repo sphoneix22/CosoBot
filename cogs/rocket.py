@@ -1,14 +1,8 @@
-import configparser
-
 import discord
 import rls.rocket
 import steam
 from discord.ext import commands
 
-parser = configparser.ConfigParser()
-parser.read('secret.ini')
-
-ROCKET_LEAGUE_API_KEY = parser.get(section='secret', option='rocket_league_api_key')
 ROCKET_LEAGUE_TIERS = {0: 'Unranked', 1: 'Bronze I', 2: 'Bronze II', 3: 'Bronze III', 4: 'Silver I', 5: 'Silver II',
                        6: 'Silver III',
                        7: 'Gold I', 8: 'Gold II', 9: 'Gold III', 10: 'Platinum I', 11: 'Platinum II',
@@ -30,7 +24,7 @@ class Rocket():
         async with ctx.typing():
             custom_url = ctx.message.content[10:]
             id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/' + custom_url)
-            razzo = rls.rocket.RocketLeague(ROCKET_LEAGUE_API_KEY)
+            razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])
             try:
                 giocatore = razzo.players.player(id=id_64, platform=1).json()
                 em = discord.Embed(title='Rocket League Stats', colour=discord.Colour(2041),
@@ -51,7 +45,7 @@ class Rocket():
         async with ctx.typing():
             custom_url = ctx.message.content[9:]
             id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/' + custom_url)
-            razzo = rls.rocket.RocketLeague(ROCKET_LEAGUE_API_KEY)
+            razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])
             try:
                 giocatore = razzo.players.player(id=id_64, platform=1).json()
                 em = discord.Embed(title='Rocket League Ranks', colour=discord.Colour(2041),
