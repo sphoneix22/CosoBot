@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+import sys
 import asyncio
 import logging
 import os
@@ -21,6 +24,23 @@ client = commands.Bot(command_prefix=BOT_PREFIX)
 
 
 def main():
+    cogs_loader()
+    logger()
+    client.start_time = time.time()
+    branch()
+    linux()
+    if get_flags() == '--test':
+        exit(0)
+
+
+def get_flags():
+    try:
+        return sys.argv[1]
+    except IndexError:
+        client.flags = None
+
+
+def cogs_loader():
     for extension in EXTENSION_LIST:
         try:
             client.load_extension(extension)
@@ -28,16 +48,14 @@ def main():
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
-    logger()
-    client.start_time = time.time()
-    branch()
-    linux()
+
 
 def linux():
     if name == 'nt':
         client.linux = False
     else:
         client.linux = True
+
 
 def logger():
     logger_DEBUG = logging.getLogger('discord')
