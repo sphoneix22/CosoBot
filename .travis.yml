@@ -2,6 +2,7 @@ language: python
 python:
   - "3.6.5"
   - "3.7.0"
+dist: xenial
 install:
   - pip install iso8601
   - pip install -r requirements.txt
@@ -9,4 +10,4 @@ script:
   - python -m compileall ./cosobot.py
   - python -m compileall ./cogs
   - python ./cosobot.py --test
-sudo: enabled
+sudo: true
