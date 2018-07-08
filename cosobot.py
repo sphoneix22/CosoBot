@@ -27,10 +27,10 @@ def main():
     cogs_loader()
     logger()
     client.start_time = time.time()
-    branch()
     linux()
     if get_flags() == '--test':
         exit(0)
+        branch()
 
 
 def get_flags():
