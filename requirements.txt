@@ -1,3 +1,4 @@
+iso8601==0.1.12
 git+https://github.com/Rapptz/discord.py@rewrite
 git+http://github.com/russ-/pychallonge#egg=pychallonge
 aiohttp==3.3.2
@@ -19,7 +20,6 @@ gspread==3.0.1
 httplib2==0.11.3
 idna==2.7
 idna-ssl==1.1.0
-iso8601==0.1.12
 multidict==4.3.1
 oauth2client==4.1.2
 protobuf==3.6.0
