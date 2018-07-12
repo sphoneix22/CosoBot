@@ -41,3 +41,5 @@ websockets==5.0.1
 wikipedia==1.4.0
 yarl==1.2.6
 youtube-dl==2018.7.4
+italian-dictionary
+lxml
