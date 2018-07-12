@@ -3,6 +3,7 @@ import os
 import discord
 from discord.ext import commands
 from google_images_download import google_images_download
+from italian_dictionary import get_all_data, exceptions
 
 import wikipedia
 
@@ -68,7 +69,20 @@ class Google():
             except wikipedia.exceptions.PageError:
                 await ctx.send("Pagina non esistente.")
 
-    # todo definizione
+    @commands.command(name='def')
+    async def dictionary(self,ctx):
+        word = ctx.message.content[5:]
+        try:
+            defs = get_all_data(word)
+            embed = discord.Embed(title=defs['lemma'], url=defs['url'], description=defs['definizione'][0])
+            embed.add_field(name="Grammatica", value=defs['grammatica'], inline=True)
+            embed.add_field(name="Pronuncia", value=defs['pronuncia'], inline=True)
+            embed.set_footer(text="Powered by italian_dictionary PP",
+                             icon_url="https://us.123rf.com/450wm/paolo77/paolo771206/paolo77120600033/14002277"
+                                      "-italian-flag-and-language-icon-isolated-vector-illustration.jpg")
+            await ctx.send(embed=embed)
+        except exceptions.WordNotFoundError:
+            await ctx.send(f"Hey, {word} sembra non essere una parola esistente nel dizionario.")
 
 
 def setup(client):
