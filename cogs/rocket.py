@@ -48,20 +48,30 @@ class Rocket():
             razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])
             try:
                 giocatore = razzo.players.player(id=id_64, platform=1).json()
+
+                def get_points(actual_points):
+                    if actual_points in ROCKET_LEAGUE_POINTS:
+                        return "Sei appena salito di rank!"
+                    points = min(x for x in ROCKET_LEAGUE_POINTS if x > actual_points)
+                    return points - actual_points
+
+                print((giocatore['rankedSeasons']['8']['11']['rankPoints']))
+                print([giocatore['rankedSeasons']['8']['10']['rankPoints']][0])
+
                 em = discord.Embed(title='Rocket League Ranks', colour=discord.Colour(2041),
                                    description=f"Statistiche di {giocatore['displayName']}")
                 em.set_thumbnail(url="https://i.imgur.com/qqX4qjb.png")
                 em.add_field(name='__1vs1__',
                              value=f"{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['10']['tier']]} divisione {giocatore['rankedSeasons']['8']['10']['division']} \n"
-                                   f"**{giocatore['rankedSeasons']['8']['10']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up:",
+                                   f"**{get_points([giocatore['rankedSeasons']['8']['10']['rankPoints']][0])}** punti per salire di rank :up:",
                              inline=True)
                 em.add_field(name='__2vs2__',
                              value=f"{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['11']['tier']]} divisione {giocatore['rankedSeasons']['8']['11']['division']} \n"
-                                   f"**{giocatore['rankedSeasons']['8']['11']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up:",
+                                   f"**{get_points(giocatore['rankedSeasons']['8']['11']['rankPoints'])}** punti per salire di rank :up:",
                              inline=True)
                 em.add_field(name='__3vs3__',
                              value=f"**{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['13']['tier']]} divisione {giocatore['rankedSeasons']['8']['13']['division']} \n"
-                                   f"**{giocatore['rankedSeasons']['8']['13']['rankPoints'] - min(ROCKET_LEAGUE_POINTS,key=lambda x:abs(x-8))}** punti per salire di rank :up:",
+                                   f"**{get_points(giocatore['rankedSeasons']['8']['13']['rankPoints'])}** punti per salire di rank :up:",
                              inline=True)
                 await ctx.send(f"Ecco, {ctx.message.author.mention}.", embed=em)
             except:
