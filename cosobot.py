@@ -15,7 +15,7 @@ from discord.ext import commands
 from git import Repo
 
 BOT_PREFIX = (";", ',')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google']
+EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google', 'cogs.music']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
