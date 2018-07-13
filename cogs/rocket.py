@@ -55,9 +55,6 @@ class Rocket():
                     points = min(x for x in ROCKET_LEAGUE_POINTS if x > actual_points)
                     return points - actual_points
 
-                print((giocatore['rankedSeasons']['8']['11']['rankPoints']))
-                print([giocatore['rankedSeasons']['8']['10']['rankPoints']][0])
-
                 em = discord.Embed(title='Rocket League Ranks', colour=discord.Colour(2041),
                                    description=f"Statistiche di {giocatore['displayName']}")
                 em.set_thumbnail(url="https://i.imgur.com/qqX4qjb.png")
@@ -70,7 +67,7 @@ class Rocket():
                                    f"**{get_points(giocatore['rankedSeasons']['8']['11']['rankPoints'])}** punti per salire di rank :up:",
                              inline=True)
                 em.add_field(name='__3vs3__',
-                             value=f"**{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['13']['tier']]} divisione {giocatore['rankedSeasons']['8']['13']['division']} \n"
+                             value=f"{ROCKET_LEAGUE_TIERS[giocatore['rankedSeasons']['8']['13']['tier']]} divisione {giocatore['rankedSeasons']['8']['13']['division']} \n"
                                    f"**{get_points(giocatore['rankedSeasons']['8']['13']['rankPoints'])}** punti per salire di rank :up:",
                              inline=True)
                 await ctx.send(f"Ecco, {ctx.message.author.mention}.", embed=em)
