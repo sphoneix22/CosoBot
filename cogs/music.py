@@ -5,21 +5,16 @@ from youtube_dl import YoutubeDL
 from googleapiclient.discovery import build
 from async_timeout import timeout
 
-
 API = 'youtube'
 API_V = 'v3'
 
 ytdl_opts = {
     "format" : "bestaudio/best",
     "outtmpl" : "./data/cache/music/%(extractor)s-%(id)s.%(ext)s",
-    "quiet" : False
+    "quiet" : True
 }
 
 ytdl = YoutubeDL(ytdl_opts)
-
-# class YTDL
-# class Musicplayer with loop
-# class music
 
 class YTDL:
     """
@@ -118,6 +113,12 @@ class Music:
     def __init__(self,bot):
         self.bot = bot
         self.players = {}
+        self.skips = {}
+
+    async def cleanup(self, guild):
+        await guild.voice_client.disconnect()
+        del self.players[guild.id]
+
 
     def get_player(self, ctx):
         """Retrieve guild player or generate one"""
@@ -150,6 +151,28 @@ class Music:
         msg += "**Scrivi il numero della canzone che vuoi ascoltare**"
         return msg
 
+    async def skip_counter(self, users, ctx):
+        if len(users)-1 % 2 == 0:
+            max_limit = len(users)-1 / 2
+        else:
+            max_limit = len(users) // 2
+
+        try:
+            if max_limit == self.skips[ctx.guild.id]:
+                await ctx.send("Ok, skippo...")
+                ctx.voice_client.stop()
+            else:
+                await ctx.send(f"Mancano ancora {max_limit-self.skips[ctx.guild.id]+1} voti.")
+                self.skips[ctx.guild.id] += 1
+
+        except KeyError:
+            if max_limit == 1:
+                await ctx.send(f"Ok, skippo...")
+                return ctx.voice_client.stop()
+            await ctx.send(f"Mancano ancora {max_limit-1} voti.")
+            self.skips[ctx.guild.id] = 1
+
+
     @commands.command(name='play')
     async def play(self,ctx):
         result = await YTDL.YT_search(ctx.message.content[6:],self.bot.secrets['google_api_key'])
@@ -174,6 +197,58 @@ class Music:
         except asyncio.TimeoutError:
             await ctx.send("Ok, non la suono più")
 
+    @commands.command(name='skip')
+    async def skip_(self, ctx):
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            return
+
+        await self.skip_counter(vc.channel.members,ctx)
+
+
+
+    @commands.command(name='pause')
+    async def pause_(self, ctx):
+        """
+        Pause the current playing song.
+        """
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_playing():
+            return await ctx.send(f"Ma che vuoi? {ctx.message.author.mention}")
+        elif vc.is_paused():
+            return
+
+        vc.pause()
+        await ctx.send(f"Ho messo in pausa, {ctx.message.author.mention}.")
+
+    @commands.command(name='resume')
+    async def resume_(self, ctx):
+        """
+        Resume the current paused song.
+        """
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_paused():
+            return await ctx.send(f"Ma che vuoi? {ctx.message.author.mention}")
+        elif vc.is_playing():
+            return
+
+        vc.resume()
+        await ctx.send(f"Ho ricominciato a suonare, {ctx.message.author.mention}")
+
+    @commands.command(name='stop')
+    async def stop_(self,ctx):
+        """
+        Stops and deletes the player.
+        """
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            return await ctx.send(f"Ma che vuoi? {ctx.message.author.mention}")
+
+        await self.cleanup(ctx.guild)
 
 def setup(bot):
     bot.add_cog(Music(bot=bot))
