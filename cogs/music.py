@@ -1,12 +1,13 @@
 import asyncio
-
 import discord
-from googleapiclient.discovery import build
 from discord.ext import commands
-import youtube_dl
+from youtube_dl import YoutubeDL
+from googleapiclient.discovery import build
+from async_timeout import timeout
 
-API = "youtube"
-API_VERSION = "v3"
+
+API = 'youtube'
+API_V = 'v3'
 
 ytdl_opts = {
     "format" : "bestaudio/best",
@@ -14,54 +15,165 @@ ytdl_opts = {
     "quiet" : False
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_opts)
+ytdl = YoutubeDL(ytdl_opts)
 
-class Music:
-    def __init__(self,bot):
-        self.bot = bot
+# class YTDL
+# class Musicplayer with loop
+# class music
 
-    def initialize_api(self):
-        return build(API,API_VERSION,developerKey=self.bot.secrets["google_api_key"])
-
-    def YT_search(self, query):
-        youtube = self.initialize_api()
+class YTDL:
+    """
+    Class with all YT search/download functions
+    """
+    @classmethod
+    async def YT_search(cls, query:str, api:str):
+        """
+        Searches on youtube 5 videos and return a list of dictionaries with data.
+        -----------------------------
+        :param query: str (Song to search)
+        :param api: str (api key)
+        :return: list
+        """
+        youtube = build(API,API_V,developerKey=api)
         search = youtube.search().list(
-                part='snippet',
-                q=query,
-                type='video',
-                maxResults=5
-                ).execute()
+            part='snippet',
+            q=query,
+            type='video',
+            maxResults=5
+        ).execute()
         return search['items']
 
-    async def join(self,channel):
-        return await channel.connect()
+    @classmethod
+    def downloader(cls, id):
+        """
+        Downloads a song from youtube and creates FFmpeg player with it.
+        It also returns data of the song.
+        ------------------
+        :param id: (Everything that stays after www.youtube.com/watch?v=)
+        :return: discord.FFmpegplayer, list
+        """
 
-    @commands.command(name='play')
-    async def testing(self,ctx):
-        result = self.YT_search(ctx.message.content[6:])
-        msg = "Risultati su Youtube: \n"
-        for video in result:
-            msg += f"{result.index(video)+1}-- **{video['snippet']['title']}** \n"
-        msg += "**Scrivi il numero della canzone che vuoi ascoltare**"
-        await ctx.send(msg)
-        def check(m):
-            return m.author == ctx.message.author and m.channel == ctx.message.channel and int(m.content) in range(len(result))
-        try:
-            msg = await self.bot.wait_for("message",timeout=60, check=check)
-            await ctx.send("Ok, ora la scarico...")
-            print(msg.content)
-            hey = downloader(result[int(msg.content)-1]['id']['videoId'])
-        except asyncio.TimeoutError:
-            await ctx.send("Tempo scaduto!")
-        #todo playing
-
-
-def downloader(id):
         URL = "https://www.youtube.com/watch?v={}"
         data = ytdl.extract_info(URL.format(id))
         filename = ytdl.prepare_filename(data)
         return discord.FFmpegPCMAudio(filename), data
 
 
-def setup(client):
-    client.add_cog(Music(client))
+class MusicPlayer:
+    """
+    Class assigned to each server.
+    The class implements a queue and loop to handle songs.
+
+    """
+    def __init__(self, ctx):
+        self.bot = ctx.bot
+        self._guild = ctx.guild
+        self._channel = ctx.channel
+        self._cog = ctx.cog
+
+        self.queue = asyncio.Queue()
+        self.next = asyncio.Event()
+
+        self.np = None
+
+        ctx.bot.loop.create_task(self.player_loop())
+
+    async def player_loop(self):
+        """Main player loop"""
+        await self.bot.wait_until_ready()
+
+        while not self.bot.is_closed():
+            self.next.clear()
+
+            try:
+                #Wait for song. If timeout closes connection
+                async with timeout(120):
+                    source = await self.queue.get()
+            except asyncio.TimeoutError:
+                if self in self._cog.players.values():
+                    return self.destroy(self._guild)
+                return
+
+            self.current = source
+
+            self._guild.voice_client.play(source[0], after= lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+            self.np = await self._channel.send(f"Ora suono: **{source[1]['title']}**")
+
+            await self.next.wait()
+
+            source[0].cleanup() #Cleanup FFmpeg process
+            self.current = None #Not playing at the moment
+
+            try:
+                await self.np.delete() #No longer playing
+            except discord.HTTPException:
+                pass
+
+    def destroy(self,guild):
+        """Disconnect"""
+        return self.bot.loop.create_task(self._cog.cleanup(guild))
+
+
+class Music:
+    def __init__(self,bot):
+        self.bot = bot
+        self.players = {}
+
+    def get_player(self, ctx):
+        """Retrieve guild player or generate one"""
+        try:
+            player = self.players[ctx.guild.id]
+        except KeyError:
+            player = MusicPlayer(ctx)
+            self.players[ctx.guild.id] = player
+
+        return player
+
+    async def join(self, ctx):
+        if ctx.message.author.voice is None:
+            return await ctx.send("Hey, entra in un canale!")
+        if ctx.voice_client is None:
+            return await ctx.message.author.voice.channel.connect()
+        else:
+            return await ctx.voice_client.move_to(ctx.message.author.voice.channel)
+
+    async def get_msg(self, result :list):
+        """
+        Creates a choose msg from a list of videos.
+
+        :param result: list
+        :return: str
+        """
+        msg = "Risultati su Youtube: \n"
+        for video in result:
+            msg += f"{result.index(video)+1}-- **{video['snippet']['title']}** \n"
+        msg += "**Scrivi il numero della canzone che vuoi ascoltare**"
+        return msg
+
+    @commands.command(name='play')
+    async def play(self,ctx):
+        result = await YTDL.YT_search(ctx.message.content[6:],self.bot.secrets['google_api_key'])
+        choose_msg = await self.get_msg(result)
+        await ctx.send(choose_msg)
+        #Now we have sent the message to choose the video from, let's wait for an asnwer
+
+        def check(m):
+            """
+            Checks if the message is sent by the user and if the number is valid
+            """
+            return m.author == ctx.message.author and m.channel == ctx.message.channel and int(m.content) in range(1, len(result)+1)
+
+        try:
+            msg = await self.bot.wait_for("message",timeout=60,check=check)
+            await ctx.send("Ok, canzone scelta.")
+            id = result[int(msg.content)-1]['id']['videoId']  #gets video id by the index of the list
+            vc = await self.join(ctx)
+            song = YTDL.downloader(id)
+            player = self.get_player(ctx)
+            await player.queue.put(song)
+        except asyncio.TimeoutError:
+            await ctx.send("Ok, non la suono più")
+
+
+def setup(bot):
+    bot.add_cog(Music(bot=bot))
