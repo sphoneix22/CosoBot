@@ -177,6 +177,8 @@ class Music:
 
     @commands.command(name='play')
     async def play(self, ctx):
+        if ctx.message.author.voice is None:
+            return await ctx.send("Entra in un canale.")
         result = await YTDL.YT_search(ctx.message.content[6:], self.bot.secrets['google_api_key'])
         choose_msg = await self.get_msg(result)
         await ctx.send(choose_msg)
@@ -202,6 +204,8 @@ class Music:
 
     @commands.command(name='nowplaying', aliases=['np', 'song'])
     async def nowplaying_(self, ctx):
+        if not ctx.guild.voice_client.is_playing():
+            return
         if ctx.guild.id in self.players.keys():
             np = self.players[ctx.guild.id].np
             return await ctx.send(np.content)
@@ -209,6 +213,8 @@ class Music:
 
     @commands.command(name='skip')
     async def skip_(self, ctx):
+        if not ctx.guild.voice_client.is_playing():
+            return
         vc = ctx.voice_client
 
         if not vc or not vc.is_connected():
