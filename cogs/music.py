@@ -161,19 +161,21 @@ class Music:
             max_limit = len(users) // 2
 
         try:
+            if ctx.message.author.id not in self.skips[ctx.guild.id]:
+                self.skips[ctx.guild.id].append(ctx.message.author.id)
             if max_limit == len(self.skips[ctx.guild.id]):
                 await ctx.send("Ok, skippo...")
+                del self.skips[ctx.guild.id]
                 ctx.voice_client.stop()
             else:
                 await ctx.send(f"Mancano ancora {max_limit-len(self.skips[ctx.guild.id])+1} voti.")
-                self.skips[ctx.guild.id].append(ctx.message.author.id)
 
         except KeyError:
             if max_limit == 1:
                 await ctx.send(f"Ok, skippo...")
                 return ctx.voice_client.stop()
+            self.skips[ctx.guild.id] = [ctx.message.author.id]
             await ctx.send(f"Mancano ancora {max_limit-1} voti.")
-            self.skips[ctx.guild.id].append(ctx.message.author.id)
 
     @commands.command(name='play')
     async def play(self, ctx):
@@ -213,6 +215,11 @@ class Music:
 
         if not vc or not vc.is_connected():
             return
+
+        for ruolo in ctx.message.author.roles:
+            if ruolo.name == "DJ" or ruolo.name == "dj":
+                await ctx.send(f"Ora skippo solo perchè tu sei un DJ, {ctx.message.author.mention}!")
+                return vc.stop()
         try:
             if ctx.message.author.id in self.skips[ctx.guild.id]:
                 return
