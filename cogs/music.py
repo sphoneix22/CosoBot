@@ -265,6 +265,7 @@ class Music:
         await ctx.send(f"Ho ricominciato a suonare, {ctx.message.author.mention}")
 
     @commands.command(name='stop')
+    @commands.has_role("DJ")
     async def stop_(self, ctx):
         """
         Stops and deletes the player.
