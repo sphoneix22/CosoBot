@@ -1,6 +1,7 @@
 import asyncio
 
 import discord
+import datetime
 from async_timeout import timeout
 from discord.ext import commands
 from googleapiclient.discovery import build
@@ -89,6 +90,7 @@ class MusicPlayer:
                 async with timeout(120):
                     source = await self.queue.get()
             except asyncio.TimeoutError:
+                await self._channel.send("Nessuna canzone aggiunta alla coda. Esco dal canale...")
                 if self in self._cog.players.values():
                     return self.destroy(self._guild)
                 return
@@ -96,7 +98,8 @@ class MusicPlayer:
             self.current = source
 
             self._guild.voice_client.play(source[0], after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            self.np = await self._channel.send(f"Ora suono: **{source[1]['title']}**")
+
+            self.np = await self._channel.send(f"Ora sto suonando: **{source[1]['title']}** - {source[1]['uploader']} ({datetime.timedelta(seconds=source[1]['duration'])})")
 
             await self.next.wait()
 
