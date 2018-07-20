@@ -4,6 +4,10 @@
 
 # CosoBot
 A simple private bot for discord built with Discord.py Rewrite Version
+## Things to do before starting the bot
+* Create secret.ini file with discord token
+* Install requirements
+* Install wikipedia from the github repo or change line 389 in wikipedia.py to ``lis = BeautifulSoup(html, 'html.parser').find_all('li')`` if using the PyPI package.
 ## Contacts
 Discord : Sphoneix#4447
 
