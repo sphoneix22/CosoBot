@@ -93,7 +93,7 @@ class Chat():
             await msg.add_reaction('👍')
             author = ctx.message.author
             def check(reaction, user):
-                return user == author and str(reaction.emoji) == '👍'
+                return user == author and str(reaction.emoji) == '👍' and reaction.message.id == msg.id
             try:
                 await self.client.wait_for('reaction_add',timeout=60,check=check)
                 await ctx.send("Ok, riavviando...")
