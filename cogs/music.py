@@ -185,8 +185,7 @@ class Music:
         if ctx.message.author.voice is None:
             return await ctx.send("Entra in un canale.")
         result = await YTDL.YT_search(ctx.message.content[6:], self.bot.secrets['google_api_key'])
-        choose_msg = await self.get_msg(result)
-        await ctx.send(choose_msg)
+        choose_msg = await ctx.send(await self.get_msg(result))
 
         # Now we have sent the message to choose the video from, let's wait for an asnwer
 
@@ -199,6 +198,9 @@ class Music:
         try:
             msg = await self.bot.wait_for("message", timeout=60, check=check)
             await ctx.send("Ok, canzone scelta.")
+            await choose_msg.delete()
+            await ctx.message.delete()
+            await msg.delete()
             id = result[int(msg.content) - 1]['id']['videoId']  # gets video id by the index of the list
             vc = await self.join(ctx)
             song = YTDL.downloader(id)
@@ -209,6 +211,7 @@ class Music:
 
     @commands.command(name='nowplaying', aliases=['np', 'song'])
     async def nowplaying_(self, ctx):
+        await ctx.message.delete()
         if not ctx.guild.voice_client.is_playing():
             return
         if ctx.guild.id in self.players.keys():
@@ -228,13 +231,15 @@ class Music:
         for ruolo in ctx.message.author.roles:
             if ruolo.name == "DJ" or ruolo.name == "dj":
                 await ctx.send(f"Ora skippo solo perchè tu sei un DJ, {ctx.message.author.mention}!")
+                await ctx.message.delete()
                 return vc.stop()
         try:
             if ctx.message.author.id in self.skips[ctx.guild.id]:
-                return
+                return await ctx.message.delete()
         except KeyError:
             pass
 
+        await ctx.message.delete()
         await self.skip_counter(vc.channel.members, ctx)
 
     @commands.command(name='pause')
@@ -243,6 +248,7 @@ class Music:
         Pause the current playing song.
         """
         vc = ctx.voice_client
+        await ctx.message.delete()
 
         if not vc or not vc.is_playing():
             return await ctx.send(f"Ma che vuoi? {ctx.message.author.mention}")
@@ -259,6 +265,8 @@ class Music:
         """
         vc = ctx.voice_client
 
+        await ctx.message.delete()
+
         if not vc or not vc.is_paused():
             return await ctx.send(f"Ma che vuoi? {ctx.message.author.mention}")
         elif vc.is_playing():
@@ -274,6 +282,8 @@ class Music:
         Stops and deletes the player.
         """
         vc = ctx.voice_client
+
+        await ctx.message.delete()
 
         if not vc or not vc.is_connected():
             return await ctx.send(f"Ma che vuoi? {ctx.message.author.mention}")
