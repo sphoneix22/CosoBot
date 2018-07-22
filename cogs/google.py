@@ -33,7 +33,7 @@ class Google:
 
     @commands.command('image')
     @commands.cooldown(2, 10, commands.BucketType.user)
-    async def image(self, ctx):
+    async def image(self, ctx, query:str):
         """
         Downloads and image from google and sends it to user channel.
         -----------
@@ -41,7 +41,6 @@ class Google:
         :return: discord.client.message
         """
         async with ctx.typing():
-            query = ctx.message.content[7:]
             path = GID.downloader(query)
             actual_path = path[query][0]    #path returns a list of images with nested list
             return await ctx.send("**{}**".format(query), file=discord.File(actual_path))
@@ -50,7 +49,7 @@ class Google:
 
     @commands.command(name='wiki')
     @commands.cooldown(1, 2, commands.BucketType.user)
-    async def wiki(self, ctx):
+    async def wiki(self, ctx, query:str):
         """
         Looks up on Wikipedia and sends embed.
         -----------------
@@ -58,7 +57,6 @@ class Google:
         :return: discord.Client.Message
         """
         wikipedia.set_lang('it')
-        query = ctx.message.content[6:]
         async with ctx.typing():
             def get_image(pg):
                 try:
@@ -146,14 +144,13 @@ class Google:
                 return await ctx.send("Pagina non esistente.")
 
     @commands.command(name='def')
-    async def dictionary(self, ctx):
+    async def dictionary(self, ctx, word:str):
         """
         Searches on dizionario-italiano.it and sends an embed.
         ------------
         :param ctx: discord.ext.commands.Context
         :return: discord.Client.Message
         """
-        word = ctx.message.content[5:]
         try:
             defs = get_all_data(word)
             embed = discord.Embed(title=defs['lemma'], url=defs['url'], description=defs['definizione'][0])

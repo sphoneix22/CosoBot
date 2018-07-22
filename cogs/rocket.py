@@ -20,10 +20,9 @@ class Rocket():
     @commands.command(name='rl_stats',  # STATS ROCKET LEAGUE
                       description='Restituisce le statistiche di Rocket League dando il custom URL',
                       brief='Restituisce le stats di RL')
-    async def rocket(self, ctx):
+    async def rocket(self, ctx, user:str):
         async with ctx.typing():
-            custom_url = ctx.message.content[10:]
-            id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/' + custom_url)
+            id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/{}'.format(user))
             razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])
             try:
                 giocatore = razzo.players.player(id=id_64, platform=1).json()
@@ -41,10 +40,9 @@ class Rocket():
     @commands.command(name='rl_rank',
                       description="Restituisce il ranking di RL durante l'attuale stagione",
                       brief='Per vedere ranking RL')
-    async def rocket_rank(self, ctx):
+    async def rocket_rank(self, ctx, user : str):
         async with ctx.typing():
-            custom_url = ctx.message.content[9:]
-            id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/' + custom_url)
+            id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/{}'.format(user))
             razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])
             try:
                 giocatore = razzo.players.player(id=id_64, platform=1).json()

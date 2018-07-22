@@ -181,10 +181,10 @@ class Music:
             await ctx.send(f"Mancano ancora {max_limit-1} voti.")
 
     @commands.command(name='play')
-    async def play(self, ctx):
+    async def play(self, ctx, query:str):
         if ctx.message.author.voice is None:
             return await ctx.send("Entra in un canale.")
-        result = await YTDL.YT_search(ctx.message.content[6:], self.bot.secrets['google_api_key'])
+        result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
         choose_msg = await ctx.send(await self.get_msg(result))
 
         # Now we have sent the message to choose the video from, let's wait for an asnwer
