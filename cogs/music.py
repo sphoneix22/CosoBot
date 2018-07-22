@@ -57,6 +57,13 @@ class YTDL:
         filename = ytdl.prepare_filename(data)
         return discord.FFmpegPCMAudio(filename), data
 
+    @classmethod
+    def downloader_fromurl(cls, url:str):
+        data = ytdl.extract_info(url)
+        filename = ytdl.prepare_filename(data)
+        return discord.FFmpegPCMAudio(filename), data
+
+
 
 class MusicPlayer:
     """
@@ -185,6 +192,20 @@ class Music:
         query = ctx.message.content[6:]
         if ctx.message.author.voice is None:
             return await ctx.send("Entra in un canale.")
+
+        print(query)
+
+        if query.startswith(("http", "www.")):
+            link_msg = await ctx.send(f"Tento di scaricare dal link {query}...")
+            try:
+                song = YTDL.downloader_fromurl(query)
+                vc = await self.join(ctx)
+                player = self.get_player(ctx)
+                await player.queue.put(song)
+                await link_msg.delete()
+            except Exception:
+                return await ctx.send("Link non valido!")
+
         result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
         choose_msg = await ctx.send(await self.get_msg(result))
 
@@ -230,7 +251,7 @@ class Music:
             return
 
         for ruolo in ctx.message.author.roles:
-            if ruolo.name == "DJ" or ruolo.name == "dj":
+            if ruolo.name == "DJ":
                 await ctx.send(f"Ora skippo solo perchè tu sei un DJ, {ctx.message.author.mention}!")
                 await ctx.message.delete()
                 return vc.stop()
