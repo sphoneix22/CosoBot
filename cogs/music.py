@@ -193,8 +193,6 @@ class Music:
         if ctx.message.author.voice is None:
             return await ctx.send("Entra in un canale.")
 
-        print(query)
-
         if query.startswith(("http", "www.")):
             link_msg = await ctx.send(f"Tento di scaricare dal link {query}...")
             try:
@@ -202,7 +200,7 @@ class Music:
                 vc = await self.join(ctx)
                 player = self.get_player(ctx)
                 await player.queue.put(song)
-                await link_msg.delete()
+                return await link_msg.delete()
             except Exception:
                 return await ctx.send("Link non valido!")
 
