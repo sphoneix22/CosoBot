@@ -1,4 +1,3 @@
-import challonge
 import discord
 import gspread
 from discord.ext import commands
@@ -11,6 +10,7 @@ partecipanti = ['Emacor', 'Sphoneix', 'Giobitonto', 'Peppe', 'Alessandro']
 class Gsheets():
     @classmethod
     def start(self):
+        """Starts gsheets API instance."""
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         creds = ServiceAccountCredentials.from_json_keyfile_name('google_secret.json', scope)
         return gspread.authorize(creds)
@@ -23,6 +23,7 @@ class Tournaments():
     @commands.command(name='tornei')
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def tornei(self, ctx):
+        """Searches on the gsheets for tournaments counter."""
         client = Gsheets.start()
         sh = client.open('Tornei Brawlhalla').sheet1
         embed = discord.Embed(title='Classifica tornei Brawlhalla',
@@ -39,13 +40,14 @@ class Tournaments():
 
     @commands.command(name='tornei_add')
     @commands.is_owner()
-    async def add_tourn(self, ctx):
+    async def add_tourn(self, ctx, user:str):
+        """Add one win to user."""
         client = Gsheets.start()
-        if ctx.message.content[12:] not in partecipanti:
+        if user not in partecipanti:
             await ctx.send("Hey, ma se non mi dici chi ha vinto sei stupido.")
         else:
             sh = client.open("Tornei Brawlhalla").sheet1
-            cell = sh.find(ctx.message.content[12:])
+            cell = sh.find(user)
             value = int(sh.cell(cell.row, 2).value)
             sh.update_cell(cell.row, 2, value + 1)
             await ctx.send("Fatto! Congratulazioni a {}".format(ctx.message.content[12:]))
