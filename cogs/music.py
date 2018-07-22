@@ -181,7 +181,8 @@ class Music:
             await ctx.send(f"Mancano ancora {max_limit-1} voti.")
 
     @commands.command(name='play')
-    async def play(self, ctx, query:str):
+    async def play(self, ctx):
+        query = ctx.message.content[6:]
         if ctx.message.author.voice is None:
             return await ctx.send("Entra in un canale.")
         result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
