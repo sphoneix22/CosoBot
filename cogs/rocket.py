@@ -17,10 +17,15 @@ class Rocket():
     def __init__(self, client):
         self.client = client
 
-    @commands.command(name='rl_stats',  # STATS ROCKET LEAGUE
+    @commands.command(name='rl_stats',
                       description='Restituisce le statistiche di Rocket League dando il custom URL',
                       brief='Restituisce le stats di RL')
     async def rocket(self, ctx, user:str):
+        """
+        Searches on rocketleaguestats and retrieves informations about the user.
+        :param ctx: discord.ext.commands.Context
+        :param user: str
+        """
         async with ctx.typing():
             id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/{}'.format(user))
             razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])
@@ -41,6 +46,12 @@ class Rocket():
                       description="Restituisce il ranking di RL durante l'attuale stagione",
                       brief='Per vedere ranking RL')
     async def rocket_rank(self, ctx, user : str):
+        """
+        Serches the user ranks on rocketleaguestats.
+
+        :param ctx: discord.ext.commands.Context
+        :param user: str
+        """
         async with ctx.typing():
             id_64 = steam.steamid.steam64_from_url('https://steamcommunity.com/id/{}'.format(user))
             razzo = rls.rocket.RocketLeague(self.client.secrets['rocket_league_api_key'])

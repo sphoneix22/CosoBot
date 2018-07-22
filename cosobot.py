@@ -31,11 +31,17 @@ def main():
     branch()
 
 def get_secret():
+    """
+    Load secret.ini and make it bot variable.
+    """
     config = ConfigParser()
     config.read('secret.ini')
     client.secrets = dict(config.items('secret'))
 
 def get_flags():
+    """
+    Checks if in test mode.
+    """
     try:
         return sys.argv[1]
     except IndexError:
@@ -43,6 +49,9 @@ def get_flags():
 
 
 def cogs_loader():
+    """
+    Load cogs. OMG!
+    """
     for extension in EXTENSION_LIST:
         try:
             client.load_extension(extension)
@@ -53,6 +62,9 @@ def cogs_loader():
 
 
 def linux():
+    """
+    Checks if on linux.
+    """
     if name == 'nt':
         client.linux = False
     else:
@@ -60,6 +72,9 @@ def linux():
 
 
 def logger():
+    """
+    Starts logging
+    """
     logger_DEBUG = logging.getLogger('discord')
     logger_DEBUG.setLevel(logging.DEBUG)
     handler_DEBUG = logging.FileHandler(filename='./data/cache/debug.log', encoding='utf-8', mode='w')
@@ -68,12 +83,18 @@ def logger():
 
 
 def branch():
+    """
+    Checks git branch.
+    """
     repo = Repo('.')
     client.version = repo.active_branch
 
 
 @client.event
 async def cleaner():
+    """
+    Cache cleaner. When cache folder is over 200 mb.
+    """
     def get_size(path):
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(path):
@@ -91,6 +112,9 @@ async def cleaner():
 
 @client.event
 async def servers():
+    """
+    Prints to console connected servers and time.
+    """
     await client.wait_until_ready()
     while client.is_closed() is False:
         print('Logged in as')
@@ -107,6 +131,9 @@ async def servers():
 
 @client.event
 async def game():
+    """
+    Changes presence every 1000 seconds.
+    """
     await client.wait_until_ready()
     while not client.is_closed():
         playing_list = ['Ma quanto è bello sto bot?',
