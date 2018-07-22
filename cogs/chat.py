@@ -4,6 +4,7 @@ from datetime import datetime
 from subprocess import call
 import discord
 from discord.ext import commands
+from random import choice
 
 risposte = {
     'no': 'NO!',
@@ -103,6 +104,23 @@ class Chat():
         else:
             await ctx.send("Il bot si trova in ambiente Windows, non posso riavviarlo.")
 
+    @commands.command(name='moneta')
+    @commands.cooldown(2, 5, commands.BucketType.user)
+    async def moneta_(self, ctx):
+        ch = ["testa", "croce"]
+        await ctx.send(f"E' uscita {choice(ch)}, {ctx.message.author.mention}")
+
+    @commands.command(name='scegli')
+    async def scegli_(self, ctx, param1:str,param2:str):
+        if param1.lower() == param2.lower():
+            return await ctx.send("Ah! Ti sarebbe piaciuto fregarmi, {}!".format(ctx.message.author.mention))
+        msg = ["Sinceramente prefisco **{}**.", "In tutta franchezza, **{}** è meglio.", "Ma che domanda è? Ovviamente preferisco"
+                                                                                 " **{}**!"]
+        await ctx.send(choice(msg).format(choice([param1,param2])))
+
+    @commands.command(name='ping')
+    async def ping_(self, ctx):
+        await ctx.send("PONG!")
 
 def setup(client):
     client.add_cog(Chat(client))
