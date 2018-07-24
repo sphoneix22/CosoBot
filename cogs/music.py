@@ -199,7 +199,7 @@ class Music:
     async def play(self, ctx):
         query = ctx.message.content[6:]
         if ctx.message.author.voice is None:
-            return await ctx.send("Entra in un canale.")
+            return await ctx.send(f"Entra in un canale, {ctx.message.author.mention}")
 
         if query.startswith(("http", "www.")):
             link_msg = await ctx.send(f"Tento di scaricare dal link {query}...")
@@ -210,7 +210,7 @@ class Music:
                 await player.queue.put(song)
                 return await link_msg.delete()
             except Exception:
-                return await ctx.send("Link non valido!")
+                return await ctx.send(f"Link non valido, {ctx.message.author.mention}")
 
         result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
         choose_msg = await ctx.send(await self.get_msg(result))
@@ -225,7 +225,7 @@ class Music:
 
         try:
             msg = await self.bot.wait_for("message", timeout=60, check=check)
-            await ctx.send("Ok, canzone scelta.")
+            success_msg = await ctx.send("Ok, canzone scelta.")
             await choose_msg.delete()
             await ctx.message.delete()
             await msg.delete()
@@ -234,6 +234,8 @@ class Music:
             song = YTDL.downloader(id)
             player = self.get_player(ctx)
             await player.queue.put(song)
+            await success_msg.delete()
+            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
         except asyncio.TimeoutError:
             await ctx.send("Ok, non la suono più")
 
@@ -242,7 +244,7 @@ class Music:
         if not ctx.guild.voice_client.is_connected():
             return
         if not 0 < volume < 101:
-            return await ctx.send("Devi indicare un valore in percentuale tra 1 e 100.")
+            return await ctx.send(f"Devi indicare un valore in percentuale tra 1 e 100, {ctx.message.author.mention}")
 
         player = self.get_player(ctx)
 
