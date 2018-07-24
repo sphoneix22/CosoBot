@@ -233,9 +233,9 @@ class Music:
             vc = await self.join(ctx)
             song = YTDL.downloader(id)
             player = self.get_player(ctx)
+            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
             await player.queue.put(song)
             await success_msg.delete()
-            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
         except asyncio.TimeoutError:
             await ctx.send("Ok, non la suono più")
 
