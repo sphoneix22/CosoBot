@@ -19,10 +19,12 @@ ytdl_opts = {
 ytdl = YoutubeDL(ytdl_opts)
 
 
-class YTDL:
+class YTDL(discord.PCMVolumeTransformer):
     """
     Class with all YT search/download functions
     """
+    def __init__(self, source):
+        super().__init__(source)
 
     @classmethod
     async def YT_search(cls, query: str, api: str):
@@ -55,13 +57,13 @@ class YTDL:
         URL = "https://www.youtube.com/watch?v={}"
         data = ytdl.extract_info(URL.format(id))
         filename = ytdl.prepare_filename(data)
-        return discord.FFmpegPCMAudio(filename), data
+        return cls(discord.FFmpegPCMAudio(filename)), data
 
     @classmethod
     def downloader_fromurl(cls, url:str):
         data = ytdl.extract_info(url)
         filename = ytdl.prepare_filename(data)
-        return discord.FFmpegPCMAudio(filename), data
+        return cls(discord.FFmpegPCMAudio(filename)), data
 
 
 
@@ -81,6 +83,8 @@ class MusicPlayer:
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
 
+        self.volume = 0.5
+
         self.np = None
 
         ctx.bot.loop.create_task(self.player_loop())
@@ -95,22 +99,26 @@ class MusicPlayer:
             try:
                 # Wait for song. If timeout closes connection
                 async with timeout(120):
-                    source = await self.queue.get()
+                    source, data = await self.queue.get()
             except asyncio.TimeoutError:
                 await self._channel.send("Nessuna canzone aggiunta alla coda. Esco dal canale...")
                 if self in self._cog.players.values():
                     return self.destroy(self._guild)
                 return
 
+            source.volume = self.volume
+
             self.current = source
 
-            self._guild.voice_client.play(source[0], after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+            self.data = data
 
-            self.np = await self._channel.send(f"Ora sto suonando: **{source[1]['title']}** - {source[1]['uploader']} ({datetime.timedelta(seconds=source[1]['duration'])})")
+            self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+
+            self.np = await self._channel.send(f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
 
             await self.next.wait()
 
-            source[0].cleanup()  # Cleanup FFmpeg process
+            source.cleanup()  # Cleanup FFmpeg process
             self.current = None  # Not playing at the moment
 
             try:
@@ -228,6 +236,27 @@ class Music:
             await player.queue.put(song)
         except asyncio.TimeoutError:
             await ctx.send("Ok, non la suono più")
+
+    @commands.command(name='volume',aliases=['vol'])
+    async def volume_(self, ctx, volume:float):
+        if not ctx.guild.voice_client.is_connected():
+            return
+        if not 0 < volume < 101:
+            return await ctx.send("Devi indicare un valore in percentuale tra 1 e 100.")
+
+        player = self.get_player(ctx)
+
+        vc = ctx.guild.voice_client
+
+        if vc.source:
+            vc.source.volume = volume / 100
+
+        player.volume = volume / 100
+
+        await ctx.send(f"{ctx.message.author.mention} ha cambiato il volume a {volume}%")
+        await ctx.message.delete()
+
+
 
     @commands.command(name='nowplaying', aliases=['np', 'song'])
     async def nowplaying_(self, ctx):
