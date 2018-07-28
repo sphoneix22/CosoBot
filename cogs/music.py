@@ -167,10 +167,13 @@ class Music:
         :return: str
         """
         msg = "Risultati su Youtube: \n"
+        counter = 0
+
         for video in result:
             msg += f"{result.index(video)+1}-- **{video['snippet']['title']}** \n"
-        msg += "**Scrivi il numero della canzone che vuoi ascoltare**"
-        return msg
+            counter += 1
+
+        return msg, counter
 
     async def skip_counter(self, users, ctx):
         if len(users) - 1 % 2 == 0:
@@ -213,31 +216,47 @@ class Music:
                 return await ctx.send(f"Link non valido, {ctx.message.author.mention}")
 
         result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
-        choose_msg = await ctx.send(await self.get_msg(result))
+        msg, n_videos = await self.get_msg(result)
+        choose_msg = await ctx.send(msg)
+
+        emojis = {1: "\U00000031\U000020e3", 2: "\U00000032\U000020e3", 3: "\U00000033\U000020e3",
+                  4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3"}
+
+        for video in range(1,n_videos+1):
+            await choose_msg.add_reaction(emojis[video])
 
         # Now we have sent the message to choose the video from, let's wait for an asnwer
 
-        def check(m):
+        def check(reaction, user):
             """
-            Checks if the message is sent by the user and if the number is valid
+            Checks if the message is sent by the user and if the reaction is valid
             """
-            return m.author == ctx.message.author and m.channel == ctx.message.channel and int(m.content) in range(1,len(result) + 1)
+            return str(reaction) in emojis.values() and user == ctx.message.author \
+                   and reaction.message.channel == ctx.message.channel
 
         try:
-            msg = await self.bot.wait_for("message", timeout=60, check=check)
-            success_msg = await ctx.send("Ok, canzone scelta.")
-            await choose_msg.delete()
-            await ctx.message.delete()
-            await msg.delete()
-            id = result[int(msg.content) - 1]['id']['videoId']  # gets video id by the index of the list
-            vc = await self.join(ctx)
-            song = YTDL.downloader(id)
-            player = self.get_player(ctx)
-            await player.queue.put(song)
-            await success_msg.delete()
-            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
+            rct, usr = await self.bot.wait_for("reaction_add", timeout=60, check=check)
         except asyncio.TimeoutError:
-            await ctx.send("Ok, non la suono più")
+            return
+
+        success_msg = await ctx.send("Ok, canzone scelta.")
+        await choose_msg.delete()
+        await ctx.message.delete()
+
+        index = 0
+
+        for emoji in emojis.values():
+            if emoji == str(rct.emoji):
+                index = list(emojis.values()).index(emoji)
+
+        id = result[index]['id']['videoId']  # gets video id by the index of the list
+        vc = await self.join(ctx)
+        song = YTDL.downloader(id)
+        player = self.get_player(ctx)
+        if ctx.guild.voice_client.is_playing():
+            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
+        await player.queue.put(song)
+        await success_msg.delete()
 
     @commands.command(name='volume',aliases=['vol'])
     async def volume_(self, ctx, volume:float):
