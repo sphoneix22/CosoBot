@@ -33,13 +33,14 @@ class Google:
 
     @commands.command('image')
     @commands.cooldown(2, 10, commands.BucketType.user)
-    async def image(self, ctx, query:str):
+    async def image(self, ctx):
         """
         Downloads and image from google and sends it to user channel.
         -----------
         :param ctx: discord.ext.commands.Context
         :return: discord.client.message
         """
+        query = ctx.message.content[7:]
         async with ctx.typing():
             path = GID.downloader(query)
             actual_path = path[query][0]    #path returns a list of images with nested list
