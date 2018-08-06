@@ -21,13 +21,13 @@ client = commands.Bot(command_prefix=BOT_PREFIX)
 
 
 def main():
-    get_secret()
     cogs_loader()
     logger()
     client.start_time = time.time()
     linux()
     if get_flags() == '--test':
         exit(0)
+    get_secret()
     branch()
 
 def get_secret():
