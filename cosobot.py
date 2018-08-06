@@ -155,4 +155,7 @@ client.loop.create_task(cleaner())
 if __name__ == '__main__':
     main()
 
-client.run(client.secrets['discord_token'])
+try:
+    client.run(client.secrets['discord_token'])
+except Exception:
+    client.run("hey we arrrre testing! Arr!")
