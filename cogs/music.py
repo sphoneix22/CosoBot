@@ -6,6 +6,7 @@ from async_timeout import timeout
 from discord.ext import commands
 from googleapiclient.discovery import build
 from youtube_dl import YoutubeDL
+from time import time
 
 API = 'youtube'
 API_V = 'v3'
@@ -23,6 +24,7 @@ class YTDL(discord.PCMVolumeTransformer):
     """
     Class with all YT search/download functions
     """
+
     def __init__(self, source):
         super().__init__(source)
 
@@ -60,11 +62,22 @@ class YTDL(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(filename)), data
 
     @classmethod
-    def downloader_fromurl(cls, url:str):
+    def downloader_fromurl(cls, url: str):
         data = ytdl.extract_info(url)
         filename = ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename)), data
 
+    @classmethod
+    def get_channel_pic(cls, id: str, api_key: str):
+        youtube = build(API, API_V, developerKey=api_key)
+        search = youtube.search().list(
+            part="snippet",
+            q=id,
+            type="channel",
+            maxResults=1
+        ).execute()
+
+        return search['items'][0]['snippet']['thumbnails']['default']['url']
 
 
 class MusicPlayer:
@@ -112,9 +125,12 @@ class MusicPlayer:
 
             self.data = data
 
+            self.start_time = time()
+
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-            self.np = await self._channel.send(f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
+            self.np = await self._channel.send(
+                f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
 
             await self.next.wait()
 
@@ -222,7 +238,7 @@ class Music:
         emojis = {1: "\U00000031\U000020e3", 2: "\U00000032\U000020e3", 3: "\U00000033\U000020e3",
                   4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3"}
 
-        for video in range(1,n_videos+1):
+        for video in range(1, n_videos + 1):
             await choose_msg.add_reaction(emojis[video])
 
         # Now we have sent the message to choose the video from, let's wait for an asnwer
@@ -258,8 +274,8 @@ class Music:
         await player.queue.put(song)
         await success_msg.delete()
 
-    @commands.command(name='volume',aliases=['vol'])
-    async def volume_(self, ctx, volume:float):
+    @commands.command(name='volume', aliases=['vol'])
+    async def volume_(self, ctx, volume: float):
         if not ctx.guild.voice_client.is_connected():
             return
         if not 0 < volume < 101:
@@ -277,17 +293,29 @@ class Music:
         await ctx.send(f"{ctx.message.author.mention} ha cambiato il volume a {volume}%")
         await ctx.message.delete()
 
-
-
     @commands.command(name='nowplaying', aliases=['np', 'song'])
     async def nowplaying_(self, ctx):
         await ctx.message.delete()
         if not ctx.guild.voice_client.is_playing():
             return
+
         if ctx.guild.id in self.players.keys():
-            np = self.players[ctx.guild.id].np
-            return await ctx.send(np.content)
-        return
+            player = self.players[ctx.guild.id]
+            song_data = player.data
+            start_time = player.start_time
+            elapsed_time = int(time() - start_time)
+
+            embed = discord.Embed(title=song_data['title'],
+                                  url="https://www.youtube.com/watch?v={}".format(song_data['id']))
+            embed.set_thumbnail(url=song_data['thumbnail'])
+            embed.set_author(name=song_data['uploader'],
+                             url="https://www.youtube.com/channel/{}".format(song_data["uploader_url"]),
+                             icon_url=YTDL.get_channel_pic(song_data['uploader'], self.bot.secrets["google_api_key"]))
+            embed.add_field(name="Time", value="{}/{}".format(datetime.timedelta(seconds=elapsed_time),
+                                                              datetime.timedelta(seconds=song_data["duration"])))
+            embed.set_footer(text=f"Richiesto da {str(ctx.message.author)}", icon_url=ctx.message.author.avatar_url)
+
+            await ctx.send(embed=embed)
 
     @commands.command(name='skip')
     async def skip_(self, ctx):
