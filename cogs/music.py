@@ -6,6 +6,7 @@ from async_timeout import timeout
 from discord.ext import commands
 from googleapiclient.discovery import build
 from youtube_dl import YoutubeDL
+from time import time
 
 API = 'youtube'
 API_V = 'v3'
@@ -23,6 +24,7 @@ class YTDL(discord.PCMVolumeTransformer):
     """
     Class with all YT search/download functions
     """
+
     def __init__(self, source):
         super().__init__(source)
 
@@ -60,11 +62,22 @@ class YTDL(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(filename)), data
 
     @classmethod
-    def downloader_fromurl(cls, url:str):
+    def downloader_fromurl(cls, url: str):
         data = ytdl.extract_info(url)
         filename = ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename)), data
 
+    @classmethod
+    def get_channel_pic(cls, id: str, api_key: str):
+        youtube = build(API, API_V, developerKey=api_key)
+        search = youtube.search().list(
+            part="snippet",
+            q=id,
+            type="channel",
+            maxResults=1
+        ).execute()
+
+        return search['items'][0]['snippet']['thumbnails']['default']['url']
 
 
 class MusicPlayer:
@@ -112,9 +125,12 @@ class MusicPlayer:
 
             self.data = data
 
+            self.start_time = time()
+
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-            self.np = await self._channel.send(f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
+            self.np = await self._channel.send(
+                f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
 
             await self.next.wait()
 
@@ -167,10 +183,13 @@ class Music:
         :return: str
         """
         msg = "Risultati su Youtube: \n"
+        counter = 0
+
         for video in result:
             msg += f"{result.index(video)+1}-- **{video['snippet']['title']}** \n"
-        msg += "**Scrivi il numero della canzone che vuoi ascoltare**"
-        return msg
+            counter += 1
+
+        return msg, counter
 
     async def skip_counter(self, users, ctx):
         if len(users) - 1 % 2 == 0:
@@ -213,34 +232,50 @@ class Music:
                 return await ctx.send(f"Link non valido, {ctx.message.author.mention}")
 
         result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
-        choose_msg = await ctx.send(await self.get_msg(result))
+        msg, n_videos = await self.get_msg(result)
+        choose_msg = await ctx.send(msg)
+
+        emojis = {1: "\U00000031\U000020e3", 2: "\U00000032\U000020e3", 3: "\U00000033\U000020e3",
+                  4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3"}
+
+        for video in range(1, n_videos + 1):
+            await choose_msg.add_reaction(emojis[video])
 
         # Now we have sent the message to choose the video from, let's wait for an asnwer
 
-        def check(m):
+        def check(reaction, user):
             """
-            Checks if the message is sent by the user and if the number is valid
+            Checks if the message is sent by the user and if the reaction is valid
             """
-            return m.author == ctx.message.author and m.channel == ctx.message.channel and int(m.content) in range(1,len(result) + 1)
+            return str(reaction) in emojis.values() and user == ctx.message.author \
+                   and reaction.message.channel == ctx.message.channel
 
         try:
-            msg = await self.bot.wait_for("message", timeout=60, check=check)
-            success_msg = await ctx.send("Ok, canzone scelta.")
-            await choose_msg.delete()
-            await ctx.message.delete()
-            await msg.delete()
-            id = result[int(msg.content) - 1]['id']['videoId']  # gets video id by the index of the list
-            vc = await self.join(ctx)
-            song = YTDL.downloader(id)
-            player = self.get_player(ctx)
-            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
-            await player.queue.put(song)
-            await success_msg.delete()
+            rct, usr = await self.bot.wait_for("reaction_add", timeout=60, check=check)
         except asyncio.TimeoutError:
-            await ctx.send("Ok, non la suono più")
+            return
 
-    @commands.command(name='volume',aliases=['vol'])
-    async def volume_(self, ctx, volume:float):
+        success_msg = await ctx.send("Ok, canzone scelta.")
+        await choose_msg.delete()
+        await ctx.message.delete()
+
+        index = 0
+
+        for emoji in emojis.values():
+            if emoji == str(rct.emoji):
+                index = list(emojis.values()).index(emoji)
+
+        id = result[index]['id']['videoId']  # gets video id by the index of the list
+        vc = await self.join(ctx)
+        song = YTDL.downloader(id)
+        player = self.get_player(ctx)
+        if ctx.guild.voice_client.is_playing():
+            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
+        await player.queue.put(song)
+        await success_msg.delete()
+
+    @commands.command(name='volume', aliases=['vol'])
+    async def volume_(self, ctx, volume: float):
         if not ctx.guild.voice_client.is_connected():
             return
         if not 0 < volume < 101:
@@ -258,17 +293,29 @@ class Music:
         await ctx.send(f"{ctx.message.author.mention} ha cambiato il volume a {volume}%")
         await ctx.message.delete()
 
-
-
     @commands.command(name='nowplaying', aliases=['np', 'song'])
     async def nowplaying_(self, ctx):
         await ctx.message.delete()
         if not ctx.guild.voice_client.is_playing():
             return
+
         if ctx.guild.id in self.players.keys():
-            np = self.players[ctx.guild.id].np
-            return await ctx.send(np.content)
-        return
+            player = self.players[ctx.guild.id]
+            song_data = player.data
+            start_time = player.start_time
+            elapsed_time = int(time() - start_time)
+
+            embed = discord.Embed(title=song_data['title'],
+                                  url="https://www.youtube.com/watch?v={}".format(song_data['id']))
+            embed.set_thumbnail(url=song_data['thumbnail'])
+            embed.set_author(name=song_data['uploader'],
+                             url="https://www.youtube.com/channel/{}".format(song_data["uploader_url"]),
+                             icon_url=YTDL.get_channel_pic(song_data['uploader'], self.bot.secrets["google_api_key"]))
+            embed.add_field(name="Time", value="{}/{}".format(datetime.timedelta(seconds=elapsed_time),
+                                                              datetime.timedelta(seconds=song_data["duration"])))
+            embed.set_footer(text=f"Richiesto da {str(ctx.message.author)}", icon_url=ctx.message.author.avatar_url)
+
+            await ctx.send(embed=embed)
 
     @commands.command(name='skip')
     async def skip_(self, ctx):

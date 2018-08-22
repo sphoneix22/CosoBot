@@ -21,13 +21,13 @@ client = commands.Bot(command_prefix=BOT_PREFIX)
 
 
 def main():
-    get_secret()
     cogs_loader()
     logger()
     client.start_time = time.time()
     linux()
     if get_flags() == '--test':
         exit(0)
+    get_secret()
     branch()
 
 def get_secret():
@@ -155,4 +155,7 @@ client.loop.create_task(cleaner())
 if __name__ == '__main__':
     main()
 
-client.run(client.secrets['discord_token'])
+try:
+    client.run(client.secrets['discord_token'])
+except Exception:
+    client.run("hey we arrrre testing! Arr!")
