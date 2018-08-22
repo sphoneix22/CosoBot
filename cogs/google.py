@@ -1,11 +1,12 @@
 import asyncio
 import os
-
+import rule34 as r34
 import discord
 import wikipedia
 from discord.ext import commands
 from google_images_download import google_images_download
 from italian_dictionary import get_all_data, exceptions
+from random import randrange
 
 response = google_images_download.googleimagesdownload()
 
@@ -163,6 +164,24 @@ class Google:
             return await ctx.send(embed=embed)
         except exceptions.WordNotFoundError:
             return await ctx.send(f"Hey, {word} sembra non essere una parola esistente nel dizionario.")
+
+    @commands.command(name="rule34")
+    @commands.is_nsfw()
+    async def rule34(self, ctx):
+        rule34 = r34.Rule34(self.client.loop)
+        query = ctx.message.content[8:]
+        urls = await rule34.getImageURLS(query)
+
+        if len(urls) == 0:
+            return await ctx.send("Nessun risultato.")
+        else:
+            choose = randrange(len(urls))
+
+        embed = discord.Embed(title="If it exists there is porn of it. If not, start uploading.", url=urls[choose],
+                              description="No exception")
+        embed.set_image(url=urls[choose])
+
+        await ctx.send(embed=embed)
 
 
 def setup(client):
