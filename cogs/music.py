@@ -253,7 +253,7 @@ class Music:
         try:
             rct, usr = await self.bot.wait_for("reaction_add", timeout=60, check=check)
         except asyncio.TimeoutError:
-            return
+            return await choose_msg.delete()
 
         success_msg = await ctx.send("Ok, canzone scelta.")
         await choose_msg.delete()
@@ -267,10 +267,10 @@ class Music:
 
         id = result[index]['id']['videoId']  # gets video id by the index of the list
         vc = await self.join(ctx)
-        song = YTDL.downloader(id)
+        song= YTDL.downloader(id)
         player = self.get_player(ctx)
         if ctx.guild.voice_client.is_playing():
-            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{player.data['title']}** alla coda.")
+            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
         await player.queue.put(song)
         await success_msg.delete()
 
