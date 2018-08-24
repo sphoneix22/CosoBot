@@ -7,7 +7,6 @@ from discord.ext import commands
 from random import choice
 
 risposte = {
-    'no': 'NO!',
     'silvio': 'PALDINO!',
     'altro che': 'IL FUTTBOOL, FUTTBOOOOL!!',
     'obunga': 'AARGHHH!!',
@@ -20,6 +19,9 @@ risposte = {
     'sphoneix': 'Esperto di fantaciclismo'
 }
 
+risposte_singole = {
+    'no':"NO!"
+}
 
 class Chat():
     def __init__(self, client):
@@ -43,9 +45,13 @@ class Chat():
         if ctx.author.id != 457195507815546880:
             content = ctx.content.lower()
             try:
-                await ctx.channel.send(risposte[content])
+                if content in risposte_singole.keys():
+                    await ctx.delete()
+                    return await ctx.channel.send(risposte_singole[content])
+                return await ctx.channel.send(risposte[content])
             except KeyError:
                 return
+        return
 
     @commands.command(name='chiudi')
     async def stop(self, ctx):
