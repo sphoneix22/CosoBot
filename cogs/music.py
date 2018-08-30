@@ -236,10 +236,11 @@ class Music:
         choose_msg = await ctx.send(msg)
 
         emojis = {1: "\U00000031\U000020e3", 2: "\U00000032\U000020e3", 3: "\U00000033\U000020e3",
-                  4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3"}
+                  4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3", 'x':'\U0000274c'}
 
         for video in range(1, n_videos + 1):
             await choose_msg.add_reaction(emojis[video])
+        await choose_msg.add_reaction(emojis['x'])
 
         # Now we have sent the message to choose the video from, let's wait for an asnwer
 
@@ -253,6 +254,10 @@ class Music:
         try:
             rct, usr = await self.bot.wait_for("reaction_add", timeout=60, check=check)
         except asyncio.TimeoutError:
+            return await choose_msg.delete()
+
+        if str(rct) == '\U0000274c':
+            await ctx.message.delete()
             return await choose_msg.delete()
 
         success_msg = await ctx.send("Ok, canzone scelta.")
