@@ -47,18 +47,18 @@ class YTDL(discord.PCMVolumeTransformer):
         return search['items']
 
     @classmethod
-    def downloader(cls, video_id, silent=False):
+    def downloader(cls, id, silent=False):
         """
         Downloads a song from youtube and creates FFmpeg player with it.
         It also returns data of the song.
         ------------------
         :param silent:
-        :param video_id: (Everything that stays after www.youtube.com/watch?v=)
+        :param id: (Everything that stays after www.youtube.com/watch?v=)
         :return: discord.FFmpegplayer, list
         """
 
         URL = "https://www.youtube.com/watch?v={}"
-        data = ytdl.extract_info(URL.format(video_id))
+        data = ytdl.extract_info(URL.format(id))
         filename = ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename)), data, silent
 
@@ -69,11 +69,11 @@ class YTDL(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(filename)), data, silent
 
     @classmethod
-    def get_channel_pic(cls, channel_id: str, api_key: str):
+    def get_channel_pic(cls, id: str, api_key: str):
         youtube = build(API, API_V, developerKey=api_key)
         search = youtube.search().list(
             part="snippet",
-            q=channel_id,
+            q=id,
             type="channel",
             maxResults=1
         ).execute()
@@ -115,7 +115,7 @@ class MusicPlayer:
 
             try:
                 # Wait for song. If timeout closes connection
-                async with timeout(120):
+                async with timeout(60):
                     source, data, silent = await self.queue.get()
             except asyncio.TimeoutError:
                 await self._channel.send("Nessuna canzone aggiunta alla coda. Esco dal canale...")
@@ -146,6 +146,8 @@ class MusicPlayer:
                 await self.np.delete()  # No longer playing
             except discord.HTTPException:
                 pass
+            except AttributeError:
+                pass
 
     def destroy(self, guild):
         """Disconnect"""
@@ -172,7 +174,7 @@ class Music:
 
         return player
 
-    @staticmethod
+    @staticmethod 
     async def join(ctx):
         if ctx.message.author.voice is None:
             return await ctx.send("Hey, entra in un canale!")
@@ -181,8 +183,7 @@ class Music:
         else:
             return await ctx.voice_client.move_to(ctx.message.author.voice.channel)
 
-    @staticmethod
-    async def get_msg(result: list):
+    async def get_msg(self, result: list):
         """
         Creates a choose msg from a list of videos.
 
@@ -317,9 +318,9 @@ class Music:
             if emoji == str(rct.emoji):
                 index = list(emojis.values()).index(emoji)
 
-        video_id = result[index]['id']['videoId']  # gets video id by the index of the list
+        id = result[index]['id']['videoId']  # gets video id by the index of the list
         vc = await self.join(ctx)
-        song = YTDL.downloader(video_id, silent=silent)
+        song = YTDL.downloader(id, silent=silent)
         player = self.get_player(ctx)
         if ctx.guild.voice_client.is_playing():
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
