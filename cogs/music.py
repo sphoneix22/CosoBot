@@ -47,32 +47,33 @@ class YTDL(discord.PCMVolumeTransformer):
         return search['items']
 
     @classmethod
-    def downloader(cls, id):
+    def downloader(cls, video_id, silent=False):
         """
         Downloads a song from youtube and creates FFmpeg player with it.
         It also returns data of the song.
         ------------------
-        :param id: (Everything that stays after www.youtube.com/watch?v=)
+        :param silent:
+        :param video_id: (Everything that stays after www.youtube.com/watch?v=)
         :return: discord.FFmpegplayer, list
         """
 
         URL = "https://www.youtube.com/watch?v={}"
-        data = ytdl.extract_info(URL.format(id))
+        data = ytdl.extract_info(URL.format(video_id))
         filename = ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename)), data
+        return cls(discord.FFmpegPCMAudio(filename)), data, silent
 
     @classmethod
-    def downloader_fromurl(cls, url: str):
+    def downloader_fromurl(cls, url: str, silent=False):
         data = ytdl.extract_info(url)
         filename = ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename)), data
+        return cls(discord.FFmpegPCMAudio(filename)), data, silent
 
     @classmethod
-    def get_channel_pic(cls, id: str, api_key: str):
+    def get_channel_pic(cls, channel_id: str, api_key: str):
         youtube = build(API, API_V, developerKey=api_key)
         search = youtube.search().list(
             part="snippet",
-            q=id,
+            q=channel_id,
             type="channel",
             maxResults=1
         ).execute()
@@ -96,6 +97,9 @@ class MusicPlayer:
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
 
+        self.data = None
+        self.start_time = None
+        self.current = None
         self.volume = 0.5
 
         self.np = None
@@ -112,7 +116,7 @@ class MusicPlayer:
             try:
                 # Wait for song. If timeout closes connection
                 async with timeout(120):
-                    source, data = await self.queue.get()
+                    source, data, silent = await self.queue.get()
             except asyncio.TimeoutError:
                 await self._channel.send("Nessuna canzone aggiunta alla coda. Esco dal canale...")
                 if self in self._cog.players.values():
@@ -129,8 +133,9 @@ class MusicPlayer:
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-            self.np = await self._channel.send(
-                f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
+            if not silent:
+                self.np = await self._channel.send(
+                    f"Ora sto suonando: **{data['title']}** - {data['uploader']} ({datetime.timedelta(seconds=data['duration'])})")
 
             await self.next.wait()
 
@@ -167,7 +172,8 @@ class Music:
 
         return player
 
-    async def join(self, ctx):
+    @staticmethod
+    async def join(ctx):
         if ctx.message.author.voice is None:
             return await ctx.send("Hey, entra in un canale!")
         if ctx.voice_client is None:
@@ -175,7 +181,8 @@ class Music:
         else:
             return await ctx.voice_client.move_to(ctx.message.author.voice.channel)
 
-    async def get_msg(self, result: list):
+    @staticmethod
+    async def get_msg(result: list):
         """
         Creates a choose msg from a list of videos.
 
@@ -214,13 +221,16 @@ class Music:
             self.skips[ctx.guild.id] = [ctx.message.author.id]
             await ctx.send(f"Mancano ancora {max_limit-1} voti.")
 
-    @commands.command(name='play')
-    async def play(self, ctx):
-        query = ctx.message.content[6:]
-        if ctx.message.author.voice is None:
-            return await ctx.send(f"Entra in un canale, {ctx.message.author.mention}")
-
-        if query.startswith(("http", "www.")):
+    async def link_player(self, ctx, query, silent=False):
+        if silent:
+            try:
+                song = YTDL.downloader_fromurl(query, silent=silent)
+                vc = await self.join(ctx)
+                player = self.get_player(ctx)
+                await player.queue.put(song)
+            except:
+                return
+        else:
             link_msg = await ctx.send(f"Tento di scaricare dal link {query}...")
             try:
                 song = YTDL.downloader_fromurl(query)
@@ -231,12 +241,48 @@ class Music:
             except Exception:
                 return await ctx.send(f"Link non valido, {ctx.message.author.mention}")
 
-        result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
-        msg, n_videos = await self.get_msg(result)
-        choose_msg = await ctx.send(msg)
+    async def play(self, ctx, silent=False):
+        if ctx.message.author.voice is None:
+            return await ctx.send(f"Entra in un canale, {ctx.message.author.mention}")
+
+        if silent:
+            query = ""
+            await ctx.message.delete()
+        else:
+            query = ctx.message.content[6:]
+
+        if query.startswith(("http", "www.")):
+            return await self.link_player(ctx, query, silent=silent)
+
+        if silent:
+            dm_message = await ctx.message.author.send("Scrivimi ciò che vuoi suonare.\n (Heisenberg o Bari Vecchia?)")
+
+            def silent_check(m):
+                return m.author == ctx.message.author and m.channel == dm_message.channel
+
+            try:
+                query_msg = await self.bot.wait_for('message', check=silent_check)
+            except asyncio.TimeoutError:
+                return
+
+            query = query_msg.content
+
+            if query.startswith(("http", "www.")):
+                return await self.link_player(ctx, query, silent=True)
+
+            result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
+            msg, n_videos = await self.get_msg(result)
+            try:
+                choose_msg = await ctx.message.author.send(msg)
+            except:
+                return
+        else:
+            result = await YTDL.YT_search(query, self.bot.secrets['google_api_key'])
+            msg, n_videos = await self.get_msg(result)
+            choose_msg = await ctx.send(msg)
 
         emojis = {1: "\U00000031\U000020e3", 2: "\U00000032\U000020e3", 3: "\U00000033\U000020e3",
-                  4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3", 'x':'\U0000274c'}
+                  4: "\U00000034\U000020e3", 5: "\U00000035\U000020e3", 'x': '\U0000274c'}
 
         for video in range(1, n_videos + 1):
             await choose_msg.add_reaction(emojis[video])
@@ -248,21 +294,22 @@ class Music:
             """
             Checks if the message is sent by the user and if the reaction is valid
             """
-            return str(reaction) in emojis.values() and user == ctx.message.author \
-                   and reaction.message.channel == ctx.message.channel
+            return str(
+                reaction) in emojis.values() and user == ctx.message.author and reaction.message.id == choose_msg.id
 
         try:
             rct, usr = await self.bot.wait_for("reaction_add", timeout=60, check=check)
         except asyncio.TimeoutError:
             return await choose_msg.delete()
-
-        if str(rct) == '\U0000274c':
+        if str(rct) == '\U0000274c' and silent:
+            return await choose_msg.delete()
+        elif str(rct) == '\U0000274c' and not silent:
             await ctx.message.delete()
             return await choose_msg.delete()
 
-        success_msg = await ctx.send("Ok, canzone scelta.")
+        if not silent:
+            success_msg = await ctx.send("Ok, canzone scelta.")
         await choose_msg.delete()
-        await ctx.message.delete()
 
         index = 0
 
@@ -270,14 +317,23 @@ class Music:
             if emoji == str(rct.emoji):
                 index = list(emojis.values()).index(emoji)
 
-        id = result[index]['id']['videoId']  # gets video id by the index of the list
+        video_id = result[index]['id']['videoId']  # gets video id by the index of the list
         vc = await self.join(ctx)
-        song= YTDL.downloader(id)
+        song = YTDL.downloader(video_id, silent=silent)
         player = self.get_player(ctx)
         if ctx.guild.voice_client.is_playing():
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
         await player.queue.put(song)
-        await success_msg.delete()
+        if not silent:
+            await success_msg.delete()
+
+    @commands.command(name='play')
+    async def play_(self, ctx):
+        await self.play(ctx)
+
+    @commands.command(name="playsilent")
+    async def play_silent(self, ctx):
+        await self.play(ctx, silent=True)
 
     @commands.command(name='volume', aliases=['vol'])
     async def volume_(self, ctx, volume: float):
