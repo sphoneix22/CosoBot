@@ -47,18 +47,18 @@ class YTDL(discord.PCMVolumeTransformer):
         return search['items']
 
     @classmethod
-    def downloader(cls, id, silent=False):
+    def downloader(cls, video_id, silent=False):
         """
         Downloads a song from youtube and creates FFmpeg player with it.
         It also returns data of the song.
         ------------------
         :param silent:
-        :param id: (Everything that stays after www.youtube.com/watch?v=)
+        :param video_id: (Everything that stays after www.youtube.com/watch?v=)
         :return: discord.FFmpegplayer, list
         """
 
         URL = "https://www.youtube.com/watch?v={}"
-        data = ytdl.extract_info(URL.format(id))
+        data = ytdl.extract_info(URL.format(video_id))
         filename = ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename)), data, silent
 
@@ -69,11 +69,11 @@ class YTDL(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(filename)), data, silent
 
     @classmethod
-    def get_channel_pic(cls, id: str, api_key: str):
+    def get_channel_pic(cls, channel_id: str, api_key: str):
         youtube = build(API, API_V, developerKey=api_key)
         search = youtube.search().list(
             part="snippet",
-            q=id,
+            q=channel_id,
             type="channel",
             maxResults=1
         ).execute()
@@ -162,7 +162,7 @@ class Music:
 
     async def cleanup(self, guild):
         await guild.voice_client.disconnect()
-        del self.players[guild.id]
+        del self.players[guild.video_id]
 
     def get_player(self, ctx):
         """Retrieve guild player or generate one"""
@@ -183,7 +183,8 @@ class Music:
         else:
             return await ctx.voice_client.move_to(ctx.message.author.voice.channel)
 
-    async def get_msg(self, result: list):
+    @staticmethod
+    async def get_msg(result: list):
         """
         Creates a choose msg from a list of videos.
 
@@ -318,9 +319,9 @@ class Music:
             if emoji == str(rct.emoji):
                 index = list(emojis.values()).index(emoji)
 
-        id = result[index]['id']['videoId']  # gets video id by the index of the list
+        video_id = result[index]['id']['videoId']  # gets vvideo_ideo id by the index of the list
         vc = await self.join(ctx)
-        song = YTDL.downloader(id, silent=silent)
+        song = YTDL.downloader(video_id, silent=silent)
         player = self.get_player(ctx)
         if ctx.guild.voice_client.is_playing():
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
