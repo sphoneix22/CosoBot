@@ -226,16 +226,17 @@ class Music:
     async def link_player(self, ctx, query, silent=False):
         if silent:
             try:
+                await ctx.message.author.send("Tento di scaricare dal link...")
                 song = YTDL.downloader_fromurl(query, silent=silent)
                 vc = await self.join(ctx)
                 player = self.get_player(ctx)
                 await player.queue.put(song)
             except:
-                return
+                return await ctx.message.author.send("Errore nel download. Sei sicuro che il link sia corretto?")
         else:
             link_msg = await ctx.send(f"Tento di scaricare dal link {query}...")
             try:
-                song = YTDL.downloader_fromurl(query)
+                song = YTDL.downloader_fromurl(query, silent=silent)
                 vc = await self.join(ctx)
                 player = self.get_player(ctx)
                 await player.queue.put(song)
@@ -323,7 +324,7 @@ class Music:
         vc = await self.join(ctx)
         song = YTDL.downloader(video_id, silent=silent)
         player = self.get_player(ctx)
-        if ctx.guild.voice_client.is_playing():
+        if ctx.guild.voice_client.is_playing() and not silent:
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
         await player.queue.put(song)
         if not silent:
