@@ -162,7 +162,7 @@ class Music:
 
     async def cleanup(self, guild):
         await guild.voice_client.disconnect()
-        del self.players[guild.video_id]
+        del self.players[guild.id]
 
     def get_player(self, ctx):
         """Retrieve guild player or generate one"""
