@@ -115,6 +115,8 @@ class MusicPlayer:
 
             try:
                 # Wait for song. If timeout closes connection
+                if self.queue.empty():
+                    await self._channel.send("Coda terminata. Resto in ascolto per un altro minuto, poi ciao!")
                 async with timeout(60):
                     source, data, silent = await self.queue.get()
             except asyncio.TimeoutError:
@@ -320,12 +322,12 @@ class Music:
             if emoji == str(rct.emoji):
                 index = list(emojis.values()).index(emoji)
 
-        video_id = result[index]['id']['videoId']  # gets vvideo_ideo id by the index of the list
-        vc = await self.join(ctx)
+        video_id = result[index]['id']['videoId']  # gets video id by the index of the list
         song = YTDL.downloader(video_id, silent=silent)
-        player = self.get_player(ctx)
+        vc = await self.join(ctx)
         if ctx.guild.voice_client.is_playing() and not silent:
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
+        player = self.get_player(ctx)
         await player.queue.put(song)
         if not silent:
             await success_msg.delete()
