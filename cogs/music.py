@@ -324,6 +324,7 @@ class Music:
 
         video_id = result[index]['id']['videoId']  # gets video id by the index of the list
         song = YTDL.downloader(video_id, silent=silent)
+        song[1]['requester'] = str(ctx.message.author)
         vc = await self.join(ctx)
         if ctx.guild.voice_client.is_playing() and not silent:
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
@@ -381,7 +382,25 @@ class Music:
                                                               datetime.timedelta(seconds=song_data["duration"])))
             embed.set_footer(text=f"Richiesto da {str(ctx.message.author)}", icon_url=ctx.message.author.avatar_url)
 
+            await ctx.send(embed=embed)  # todo mettere da chi è stata richiesta la canzone
+
+    @commands.command(name='queue')
+    async def queue_(self, ctx):
+        if not ctx.guild.voice_client.is_playing():
+            return
+        player = self.get_player(ctx)
+        queue = player.queue
+        try:
+            embed = discord.Embed(title="Coda", color=0x338DFF)
+            embed.set_footer(text=f"Richiesto da {str(ctx.author)}", icon_url=ctx.author.avatar_url)
+            for song in queue._queue:
+                data = song[1]
+                embed.add_field(name=queue._queue.index(song) + 1, value=f"**{data['title']}** -- {data['uploader']} "
+                                                                         f"({datetime.timedelta(seconds=data['duration'])})"
+                                                                         f"\nRichiesta da **{data['requester']}**")
             await ctx.send(embed=embed)
+        except KeyError:
+            await ctx.send("Coda vuota")
 
     @commands.command(name='skip')
     async def skip_(self, ctx):
