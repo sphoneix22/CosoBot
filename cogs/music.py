@@ -324,7 +324,7 @@ class Music:
 
         video_id = result[index]['id']['videoId']  # gets video id by the index of the list
         song = YTDL.downloader(video_id, silent=silent)
-        song[1]['requester'] = str(ctx.message.author)
+        song[1]['requester'] = ctx.message.author
         vc = await self.join(ctx)
         if ctx.guild.voice_client.is_playing() and not silent:
             await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
@@ -373,16 +373,18 @@ class Music:
             elapsed_time = int(time() - start_time)
 
             embed = discord.Embed(title=song_data['title'],
-                                  url="https://www.youtube.com/watch?v={}".format(song_data['id']))
+                                  url="https://www.youtube.com/watch?v={}".format(song_data['id']),
+                                  color=0x338DFF)
             embed.set_thumbnail(url=song_data['thumbnail'])
             embed.set_author(name=song_data['uploader'],
                              url="https://www.youtube.com/channel/{}".format(song_data["uploader_url"]),
                              icon_url=YTDL.get_channel_pic(song_data['uploader'], self.bot.secrets["google_api_key"]))
             embed.add_field(name="Time", value="{}/{}".format(datetime.timedelta(seconds=elapsed_time),
                                                               datetime.timedelta(seconds=song_data["duration"])))
-            embed.set_footer(text=f"Richiesto da {str(ctx.message.author)}", icon_url=ctx.message.author.avatar_url)
+            embed.set_footer(text=f"Canzone richiesta da {str(song_data['requester'])}",
+                             icon_url=song_data['requester'].avatar_url)
 
-            await ctx.send(embed=embed)  # todo mettere da chi è stata richiesta la canzone
+            await ctx.send(embed=embed)
 
     @commands.command(name='queue')
     async def queue_(self, ctx):
@@ -397,7 +399,7 @@ class Music:
                 data = song[1]
                 embed.add_field(name=queue._queue.index(song) + 1, value=f"**{data['title']}** -- {data['uploader']} "
                                                                          f"({datetime.timedelta(seconds=data['duration'])})"
-                                                                         f"\nRichiesta da **{data['requester']}**")
+                                                                         f"\nRichiesta da **{str(data['requester'])}**")
             await ctx.send(embed=embed)
         except KeyError:
             await ctx.send("Coda vuota")
