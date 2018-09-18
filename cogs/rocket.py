@@ -19,7 +19,8 @@ class Rocket():
 
     @commands.command(name='rl_stats',
                       description='Restituisce le statistiche di Rocket League dando il custom URL',
-                      brief='Restituisce le stats di RL')
+                      brief='Restituisce le stats di RL',
+                      enabled=False)
     async def rocket(self, ctx, user:str):
         """
         Searches on rocketleaguestats and retrieves informations about the user.
@@ -44,7 +45,8 @@ class Rocket():
 
     @commands.command(name='rl_rank',
                       description="Restituisce il ranking di RL durante l'attuale stagione",
-                      brief='Per vedere ranking RL')
+                      brief='Per vedere ranking RL',
+                      enabled=False)
     async def rocket_rank(self, ctx, user : str):
         """
         Serches the user ranks on rocketleaguestats.

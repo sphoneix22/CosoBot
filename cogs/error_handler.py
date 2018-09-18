@@ -13,6 +13,10 @@ class CommandErrorHandler:
         if isinstance(error, ignored):
             return
         elif isinstance(error, commands.errors.DisabledCommand):
+            if ctx.command.qualified_name == 'rl_rank' or ctx.command.qualified_name == 'rl_stats':
+                return await ctx.send("L'API a cui si appoggiavano questi comandi non è più funzionante.\nPiù informazioni qui:"
+                               " ``https://www.redd.it/97p7oh``\nAl momento non esiste un'alternativa ma potrebbe esserci in"
+                               " futuro.")
             return await ctx.send(f'{ctx.command} è stato disabilitato')
         elif isinstance(error, commands.NoPrivateMessage):
             try:
