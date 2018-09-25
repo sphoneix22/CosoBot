@@ -16,7 +16,9 @@ risposte = {
     'gerardo': '...Paldino, conosciuto anche come re di Luzzi, '
                'nonchè governatore supremo e protettore della Terra '
                'tramite le forze armate, è una rispettabilissima persona degna di tale riconoscimenti.',
-    'sphoneix': 'Esperto di fantaciclismo'
+    'sphoneix': 'Esperto di fantaciclismo',
+    'good bot': 'Grazie!',
+    'bravo': 'Grazie!'
 }
 
 risposte_singole = {
