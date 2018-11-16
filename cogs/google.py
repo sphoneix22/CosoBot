@@ -51,13 +51,14 @@ class Google:
 
     @commands.command(name='wiki')
     @commands.cooldown(1, 2, commands.BucketType.user)
-    async def wiki(self, ctx, query:str):
+    async def wiki(self, ctx):
         """
         Looks up on Wikipedia and sends embed.
         -----------------
         :param ctx: discord.ext.commands.Context
         :return: discord.Client.Message
         """
+        query = ctx.message.content[6:]
         wikipedia.set_lang('it')
         async with ctx.typing():
             def get_image(pg):
