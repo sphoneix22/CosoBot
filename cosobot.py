@@ -12,10 +12,9 @@ from os import name
 import discord
 
 from discord.ext import commands
-from git import Repo
 
 BOT_PREFIX = (";", ',')
-EXTENSION_LIST = ['cogs.rocket', 'cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google', 'cogs.music']
+EXTENSION_LIST = ['cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google', 'cogs.music']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -28,7 +27,6 @@ def main():
     if get_flags() == '--test':
         exit(0)
     get_secret()
-    branch()
 
 def get_secret():
     """
@@ -80,14 +78,6 @@ def logger():
     handler_DEBUG = logging.FileHandler(filename='./data/cache/debug.log', encoding='utf-8', mode='w')
     handler_DEBUG.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger_DEBUG.addHandler(handler_DEBUG)
-
-
-def branch():
-    """
-    Checks git branch.
-    """
-    repo = Repo('.')
-    client.version = repo.active_branch
 
 
 @client.event
