@@ -203,10 +203,10 @@ class Music:
         return msg, counter
 
     async def skip_counter(self, users, ctx):
-        if len(users) - 1 % 2 == 0:
-            max_limit = len(users) - 1 / 2
+        if users % 2 == 0:
+            max_limit = users / 2
         else:
-            max_limit = len(users) // 2
+            max_limit = users // 2
 
         try:
             if ctx.message.author.id not in self.skips[ctx.guild.id]:
@@ -425,7 +425,7 @@ class Music:
             pass
 
         await ctx.message.delete()
-        await self.skip_counter(vc.channel.members, ctx)
+        await self.skip_counter(len(vc.channel.members)-1, ctx)
 
     @commands.command(name='pause')
     async def pause_(self, ctx):
