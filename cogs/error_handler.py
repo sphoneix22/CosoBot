@@ -28,7 +28,7 @@ class CommandErrorHandler:
             return await ctx.message.delete()
         elif isinstance(error,youtube_dl.DownloadError):
             if ctx.command.qualified_name == 'play':
-                await ctx.send("C'è stato un errore nel download. Non posso farci nulla.")
+                await ctx.send("C'è stato un errore nel download. Per favore segnalalo, è probabilmente un problema del pacchetto di download.")
 
 
 def setup(client):
