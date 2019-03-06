@@ -7,6 +7,7 @@ from discord.ext import commands
 from googleapiclient.discovery import build
 from youtube_dl import YoutubeDL
 from time import time
+from html import unescape
 
 API = 'youtube'
 API_V = 'v3'
@@ -197,7 +198,7 @@ class Music:
         counter = 0
 
         for video in result:
-            msg += f"{result.index(video)+1}-- **{video['snippet']['title']}** \n"
+            msg += f"{result.index(video)+1}-- **{unescape(video['snippet']['title'])}** \n"
             counter += 1
 
         return msg, counter
