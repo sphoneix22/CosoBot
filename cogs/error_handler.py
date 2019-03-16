@@ -1,7 +1,7 @@
 from discord.ext import commands
 import youtube_dl
 
-class CommandErrorHandler:
+class CommandErrorHandler(commands.Cog):
     def __init__(self, client):
         self.client = client
 

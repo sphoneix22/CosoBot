@@ -16,7 +16,7 @@ class Gsheets():
         return gspread.authorize(creds)
 
 
-class Tournaments():
+class Tournaments(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

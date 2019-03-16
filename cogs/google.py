@@ -28,7 +28,7 @@ class GID:
         return path
 
 
-class Google:
+class Google(commands.Cog):
     def __init__(self, client):
         self.client = client
 

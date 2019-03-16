@@ -25,7 +25,7 @@ risposte_singole = {
     'no':"NO!"
 }
 
-class Chat():
+class Chat(commands.Cog):
     def __init__(self, client):
         self.client = client
 
