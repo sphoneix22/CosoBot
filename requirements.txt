@@ -28,7 +28,7 @@ rule34==1.5.2
 selenium==3.141.0
 six==1.11.0
 uritemplate==3.0.0
-urllib3==1.24.1
+urllib3>=1.24.2
 websockets>=7.0
 wikipedia==1.4.0
 yarl==1.2.6
