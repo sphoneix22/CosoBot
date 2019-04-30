@@ -5,6 +5,7 @@ class CommandErrorHandler(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if hasattr(ctx.command, 'on_error'):
             return

@@ -43,6 +43,7 @@ class Chat(commands.Cog):
         else:
             await ctx.send(f"Hey @everyone! {ctx.message.author.mention} vuole parlare!")
 
+    @commands.Cog.listener()
     async def on_message(self, ctx):
         if ctx.author.id != 457195507815546880:
             content = ctx.content.lower()

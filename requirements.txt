@@ -33,4 +33,4 @@ websockets>=7.0
 wikipedia==1.4.0
 yarl==1.2.6
 youtube-dl>=2019.3.1
-git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]  #discord version=1.0.0a1752+gcc3b6bd
+discord.py<=1.0.1
