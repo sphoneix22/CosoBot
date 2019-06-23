@@ -15,7 +15,8 @@ API_V = 'v3'
 ytdl_opts = {
     "format": "bestaudio/best",
     "outtmpl": "./data/cache/music/%(extractor)s-%(id)s.%(ext)s",
-    "quiet": True
+    "quiet": True,
+    "ignoreerrors":True
 }
 
 ytdl = YoutubeDL(ytdl_opts)
@@ -42,13 +43,13 @@ class YTDL(discord.PCMVolumeTransformer):
         search = youtube.search().list(
             part='snippet',
             q=query,
-            type='video',
+            type='video,playlist',
             maxResults=5
         ).execute()
         return search['items']
 
     @classmethod
-    def downloader(cls, video_id, silent=False):
+    def downloader(cls, video_type, video_id, api_key):
         """
         Downloads a song from youtube and creates FFmpeg player with it.
         It also returns data of the song.
@@ -57,11 +58,36 @@ class YTDL(discord.PCMVolumeTransformer):
         :param video_id: (Everything that stays after www.youtube.com/watch?v=)
         :return: discord.FFmpegplayer, list
         """
+        files = []
+        if video_type == 'youtube#video':
+            URL = "https://www.youtube.com/watch?v={}"
+            data = ytdl.extract_info(URL.format(video_id))
+            filename = ytdl.prepare_filename(data)
+            entry = {'song': cls(discord.FFmpegPCMAudio(filename)),'data':data}
+            files.append(entry)
+        elif video_type == 'youtube#playlist':
+            URL = "https://www.youtube.com/playlist?list={}".format(video_id)
+            youtube = build(API, API_V, developerKey=api_key)
+            search = youtube.playlists().list(
+                part='contentDetails',
+                id=video_id,
+                maxResults=1
+            ).execute()
 
-        URL = "https://www.youtube.com/watch?v={}"
-        data = ytdl.extract_info(URL.format(video_id))
-        filename = ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename)), data, silent
+            playlist_lenght = search['items'][0]['contentDetails']['itemCount']
+            if playlist_lenght > 45:
+                return False
+            else:
+                data = ytdl.extract_info(URL.format(video_id))
+                for video in data['entries']:
+                    try:
+                        filename = ytdl.prepare_filename(video)
+                        entry = {'song':cls(discord.FFmpegPCMAudio(filename)), 'data':data}
+                        files.append(entry)
+                    except TypeError:
+                        continue
+
+        return files
 
     @classmethod
     def downloader_fromurl(cls, url: str, silent=False):
@@ -177,7 +203,7 @@ class Music(commands.Cog):
 
         return player
 
-    @staticmethod 
+    @staticmethod
     async def join(ctx):
         if ctx.message.author.voice is None:
             return await ctx.send("Hey, entra in un canale!")
@@ -198,7 +224,10 @@ class Music(commands.Cog):
         counter = 0
 
         for video in result:
-            msg += f"{result.index(video)+1}-- **{unescape(video['snippet']['title'])}** \n"
+            if video['id']['kind'] == 'youtube#video':
+                msg += f"{result.index(video)+1}-- **{unescape(video['snippet']['title'])}** \n"
+            elif video['id']['kind'] == 'youtube#playlist':
+                msg += f"{result.index(video) + 1}-- **{unescape(video['snippet']['title'])}** PLAYLIST\n"
             counter += 1
 
         return msg, counter
@@ -323,14 +352,30 @@ class Music(commands.Cog):
             if emoji == str(rct.emoji):
                 index = list(emojis.values()).index(emoji)
 
-        video_id = result[index]['id']['videoId']  # gets video id by the index of the list
-        song = YTDL.downloader(video_id, silent=silent)
-        song[1]['requester'] = ctx.message.author
+        result_type = result[index]['id']['kind'] # gets video id by the index of the list
+        if result_type == 'youtube#video':
+            video_id = result[index]['id']['videoId']
+        elif result_type == 'youtube#playlist':
+
+            video_id = result[index]['id']['playlistId']
+
+        songs = YTDL.downloader(result_type,video_id, self.bot.secrets["google_api_key"])
+        if songs is False:
+            return await ctx.message.send('Per ragioni di ordine pubblico non posso consentire questa playlist.')
+
         vc = await self.join(ctx)
-        if ctx.guild.voice_client.is_playing() and not silent:
-            await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song[1]['title']}** alla coda.")
         player = self.get_player(ctx)
-        await player.queue.put(song)
+
+        for song in songs:
+            song['data']['requester'] = ctx.message.author
+            await player.queue.put((song['song'],song['data'],silent))
+
+        if ctx.guild.voice_client.is_playing() and not silent:
+            if result_type == 'youtube#video':
+                await ctx.send(f"{ctx.message.author.mention} ha aggiunto **{song['data']['title']}** alla coda.")
+            elif result_type == 'youtube#playlist':
+                await ctx.send(f"{ctx.message.author.mention} ha aggiunto una playlist **{song['data']['title']}** alla coda.")
+
         if not silent:
             await success_msg.delete()
 
