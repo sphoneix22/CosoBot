@@ -2,14 +2,12 @@ import discord
 import gspread
 from discord.ext import commands
 from oauth2client.service_account import ServiceAccountCredentials
+from gspread.exceptions import CellNotFound
 
 
-partecipanti = ['Emacor', 'Sphoneix', 'Giobitonto', 'Peppe', 'Alessandro']
-
-
-class Gsheets():
+class Gsheets:
     @classmethod
-    def start(self):
+    def start(cls):
         """Starts gsheets API instance."""
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         creds = ServiceAccountCredentials.from_json_keyfile_name('google_secret.json', scope)
@@ -32,25 +30,32 @@ class Tournaments(commands.Cog):
                               colour=discord.Colour(0x00ff07))
         embed.set_footer(text='Powered by Google Drive API', icon_url='http://icons.iconarchive.com/icons'
                                                                       '/marcus-roberto/google-play/128/Google-Drive-icon.png')
-        for partecipante in partecipanti:
-            cell = sh.find(partecipante)
-            embed.add_field(name="**{}**".format(cell.value), value=f"Tornei vinti: {sh.cell(cell.row,2).value}",
+
+        cell = 3
+        while True:
+            player_cell = sh.acell('A' + str(cell))
+            if player_cell.value == '':
+                break
+            embed.add_field(name="**{}**".format(player_cell.value),
+                            value=f"Tornei vinti: {sh.cell(player_cell.row, 2).value}",
                             inline=True)
+            cell += 1
+
         await ctx.send(embed=embed)
 
     @commands.command(name='tornei_add')
     @commands.is_owner()
-    async def add_tourn(self, ctx, user:str):
+    async def add_tourn(self, ctx, user: str):
         """Add one win to user."""
         client = Gsheets.start()
-        if user not in partecipanti:
-            await ctx.send("Hey, ma se non mi dici chi ha vinto sei stupido.")
-        else:
-            sh = client.open("Tornei Brawlhalla").sheet1
+        sh = client.open("Tornei Brawlhalla").sheet1
+        try:
             cell = sh.find(user)
             value = int(sh.cell(cell.row, 2).value)
             sh.update_cell(cell.row, 2, value + 1)
             await ctx.send("Fatto! Congratulazioni a {}".format(ctx.message.content[12:]))
+        except CellNotFound:
+            await ctx.send("Utente non trovato.")
 
 
 def setup(client):
