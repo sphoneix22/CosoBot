@@ -1,0 +1,47 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+aiohttp = "*"
+asyncio = "*"
+attrs = "*"
+beautifulsoup4 = "*"
+cachetools = "*"
+certifi = "*"
+cffi = "*"
+chardet = "*"
+google-api-python-client = "*"
+google-auth = "*"
+google-auth-httplib2 = "*"
+gspread = "*"
+httplib2 = "*"
+idna = "*"
+italian-dictionary = "*"
+multidict = "*"
+oauth2client = "*"
+pyasn1 = "*"
+pyasn1-modules = "*"
+pycparser = "*"
+requests = "*"
+rsa = "*"
+rule34 = "*"
+selenium = "*"
+six = "*"
+uritemplate = "*"
+urllib3 = "*"
+websockets = "*"
+wikipedia = "*"
+yarl = "*"
+async_timeout = "*"
+google_images_download = "*"
+idna_ssl = "*"
+PyNaCl = "*"
+youtube_dl = "*"
+"discord.py" = "*"
+
+[requires]
+python_version = "3.6"
