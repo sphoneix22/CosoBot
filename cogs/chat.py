@@ -158,8 +158,9 @@ class Chat(commands.Cog):
             players_str = '|'
             for player in query['Playerlist']:
                 if query['Playerlist'].index(player) == len(query['Playerlist']) - 1:
-                    players_str += ' ' + {player}
-                players_str += f" {player},"
+                    players_str += ' ' + player
+                else:
+                    players_str += f" {player},"
 
         embed = discord.Embed(title="Il server è attivo", description=ping['description'])
         embed.add_field(name="Giocatori online", value=f"{query['Players']}/{ping['players']['max']} {players_str}")
