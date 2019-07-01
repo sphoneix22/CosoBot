@@ -35,6 +35,7 @@ def get_secret():
     config = ConfigParser()
     config.read('secret.ini')
     client.secrets = dict(config.items('secret'))
+    client.config = dict(confif.items('config'))
 
 def get_flags():
     """
