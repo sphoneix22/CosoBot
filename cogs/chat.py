@@ -5,6 +5,7 @@ from subprocess import call
 import discord
 from discord.ext import commands
 from random import choice
+import requests
 
 risposte = {
     'silvio': 'PALDINO!',
@@ -22,8 +23,9 @@ risposte = {
 }
 
 risposte_singole = {
-    'no':"NO!"
+    'no': "NO!"
 }
+
 
 class Chat(commands.Cog):
     def __init__(self, client):
@@ -88,15 +90,17 @@ class Chat(commands.Cog):
 
     @commands.command(name='reboot')
     @commands.is_owner()
-    async def reboot(self,ctx):
+    async def reboot(self, ctx):
         if self.client.linux is True:
             msg = await ctx.send("Questo comando riavvierà il Raspberry Pi! Sei sicuro?")
             await msg.add_reaction('👍')
             author = ctx.message.author
+
             def check(reaction, user):
                 return user == author and str(reaction.emoji) == '👍' and reaction.message.id == msg.id
+
             try:
-                await self.client.wait_for('reaction_add',timeout=60,check=check)
+                await self.client.wait_for('reaction_add', timeout=60, check=check)
                 await ctx.send("Ok, riavviando...")
                 call('reboot')
             except asyncio.TimeoutError:
@@ -111,16 +115,61 @@ class Chat(commands.Cog):
         await ctx.send(f"E' uscita {choice(ch)}, {ctx.message.author.mention}")
 
     @commands.command(name='scegli')
-    async def scegli_(self, ctx, param1:str,param2:str):
+    async def scegli_(self, ctx, param1: str, param2: str):
         if param1.lower() == param2.lower():
             return await ctx.send("Ah! Ti sarebbe piaciuto fregarmi, {}!".format(ctx.message.author.mention))
-        msg = ["Sinceramente prefisco **{}**.", "In tutta franchezza, **{}** è meglio.", "Ma che domanda è? Ovviamente preferisco"
-                                                                                 " **{}**!"]
-        await ctx.send(choice(msg).format(choice([param1,param2])))
+        msg = ["Sinceramente prefisco **{}**.", "In tutta franchezza, **{}** è meglio.",
+               "Ma che domanda è? Ovviamente preferisco"
+               " **{}**!"]
+        await ctx.send(choice(msg).format(choice([param1, param2])))
 
     @commands.command(name='ping')
     async def ping_(self, ctx):
         await ctx.send("PONG!")
+
+    @commands.command(name='server')
+    async def server_(self, ctx):
+        API = "https://api.minetools.eu/{}/{}"
+        ping = requests.get(API.format("ping", self.client.config['minecraft_server'])).json()
+
+        if "error" in ping:
+            msg = await ctx.send("Il server non è attivo. Aggiungendo un'emoticon invierò un messaggio a Sphoneix.")
+            await msg.add_reaction("📧")
+            original_message = ctx.message
+
+            def check(reaction, user):
+                return str(reaction.emoji) == "📧" and user == original_message.author and reaction.message.id == msg.id
+
+            try:
+                r, u = await self.client.wait_for('reaction_add', timeout=60, check=check)
+            except asyncio.TimeoutError:
+                return
+            else:
+                print("okace")
+                await ctx.send("Ok, ora gli scrivo!")
+                return self.client.get_user(int(self.client.config['owner_id'])).send(
+                    f"Hey! {str(ctx.message.author)} ha richiesto l'apertura del server di Minecraft.")
+
+        query = requests.get(API.format("query", self.client.config['minecraft_server'])).json()
+
+        if query['Players'] == 0:
+            players_str = ''
+        else:
+            players_str = '|'
+            for player in query['Playerlist']:
+                if query['Playerlist'].index(player) == len(query['Playerlist']) - 1:
+                    players_str += ' ' + {player}
+                players_str += f" {player},"
+
+        embed = discord.Embed(title="Il server è attivo", description=ping['description'])
+        embed.add_field(name="Giocatori online", value=f"{query['Players']}/{ping['players']['max']} {players_str}")
+        embed.set_footer(text=f'Latency {str(ping["latency"])} ms',
+                         icon_url="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/977e8c4f-1c99-46cd-b070-10cd97086c08/d36qrs5-017c3744-8c94-4d47-9633-d85b991bf2f7.png")
+        try:
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print("HELLO")
+
 
 def setup(client):
     client.add_cog(Chat(client))

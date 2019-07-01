@@ -28,6 +28,7 @@ def main():
         exit(0)
     get_secret()
 
+
 def get_secret():
     """
     Load secret.ini and make it bot variable.
@@ -35,7 +36,8 @@ def get_secret():
     config = ConfigParser()
     config.read('secret.ini')
     client.secrets = dict(config.items('secret'))
-    client.config = dict(confif.items('config'))
+    client.config = dict(config.items('config'))
+
 
 def get_flags():
     """
@@ -86,6 +88,7 @@ async def cleaner():
     """
     Cache cleaner. When cache folder is over 200 mb.
     """
+
     def get_size(path):
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(path):
