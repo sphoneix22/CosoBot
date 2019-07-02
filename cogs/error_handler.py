@@ -1,6 +1,7 @@
 from discord.ext import commands
 import youtube_dl
 
+
 class CommandErrorHandler(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -15,9 +16,10 @@ class CommandErrorHandler(commands.Cog):
             return
         elif isinstance(error, commands.errors.DisabledCommand):
             if ctx.command.qualified_name == 'rl_rank' or ctx.command.qualified_name == 'rl_stats':
-                return await ctx.send("L'API a cui si appoggiavano questi comandi non è più funzionante.\nPiù informazioni qui:"
-                               " ``https://www.redd.it/97p7oh``\nAl momento non esiste un'alternativa ma potrebbe esserci in"
-                               " futuro.")
+                return await ctx.send(
+                    "L'API a cui si appoggiavano questi comandi non è più funzionante.\nPiù informazioni qui:"
+                    " ``https://www.redd.it/97p7oh``\nAl momento non esiste un'alternativa ma potrebbe esserci in"
+                    " futuro.")
             return await ctx.send(f'{ctx.command} è stato disabilitato')
         elif isinstance(error, commands.NoPrivateMessage):
             try:
@@ -27,9 +29,12 @@ class CommandErrorHandler(commands.Cog):
         elif isinstance(error, commands.errors.CommandOnCooldown):
             await ctx.send(f"Calmati! {ctx.message.author.mention}")
             return await ctx.message.delete()
-        elif isinstance(error,youtube_dl.DownloadError):
+        elif isinstance(error, youtube_dl.DownloadError):
             if ctx.command.qualified_name == 'play':
-                await ctx.send("C'è stato un errore nel download. Per favore segnalalo, è probabilmente un problema del pacchetto di download.")
+                await ctx.send(
+                    "C'è stato un errore nel download.")
+                return await self.client.get_user(int(self.client.config['owner_id'])).send(
+                    f"Hey! Si è verificato un errore durante il download di una canzone.")
 
 
 def setup(client):
