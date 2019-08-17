@@ -194,9 +194,8 @@ class Chat(commands.Cog):
             except asyncio.TimeoutError:
                 return
             else:
-                print("okace")
                 await ctx.send("Ok, ora gli scrivo!")
-                return self.client.get_user(int(self.client.config['owner_id'])).send(
+                return await self.client.get_user(int(self.client.config['owner_id'])).send(
                     f"Hey! {str(ctx.message.author)} ha richiesto l'apertura del server di Minecraft.")
 
         query = requests.get(API.format("query", self.client.config['minecraft_server'])).json()
@@ -215,10 +214,8 @@ class Chat(commands.Cog):
         embed.add_field(name="Giocatori online", value=f"{query['Players']}/{ping['players']['max']} {players_str}")
         embed.set_footer(text=f'Latency {str(ping["latency"])} ms',
                          icon_url="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/977e8c4f-1c99-46cd-b070-10cd97086c08/d36qrs5-017c3744-8c94-4d47-9633-d85b991bf2f7.png")
-        try:
-            await ctx.send(embed=embed)
-        except Exception as e:
-            print("HELLO")
+
+        await ctx.send(embed=embed)
 
 
 def setup(client):
