@@ -10,6 +10,7 @@ import time
 from configparser import ConfigParser
 from os import name
 import discord
+import json
 
 from discord.ext import commands
 
@@ -28,6 +29,10 @@ def main():
         exit(0)
     get_secret()
 
+    for to_be_disabled_command in client.disabled_commands:
+        command = client.get_command(to_be_disabled_command)
+        command.enabled = False
+
 
 def get_secret():
     """
@@ -35,8 +40,10 @@ def get_secret():
     """
     config = ConfigParser()
     config.read('secret.ini')
+    client.parser = config
     client.secrets = dict(config.items('secret'))
     client.config = dict(config.items('config'))
+    client.disabled_commands = json.loads(config.get("commands","disabled"))
 
 
 def get_flags():

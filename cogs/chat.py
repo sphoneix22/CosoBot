@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from random import choice
 import requests
+import json
 
 risposte = {
     'silvio': 'PALDINO!',
@@ -57,6 +58,54 @@ class Chat(commands.Cog):
             except KeyError:
                 return
         return
+
+    @commands.command(name="disabilita")
+    async def disable(self, ctx, query_command:str):
+        if str(ctx.author.id) != self.client.config['owner_id']:
+            return await ctx.send("Non sei autorizzato.")
+
+        command = self.client.get_command(query_command)
+
+        if command:
+            command.enabled = False
+            if not query_command in self.client.disabled_commands:
+                self.client.disabled_commands.append(query_command)
+                self.client.parser['commands']['disabled'] = json.dumps(self.client.disabled_commands)
+                with open('secret.ini', 'w+') as configfile:
+                    self.client.parser.write(configfile)
+
+            return await ctx.send(f"Ho disabilitato il comando ``{query_command}``.")
+        else:
+            return await ctx.send(f"Il comando ``{query_command}`` non esiste.")
+
+    @commands.command(name='comandi')
+    async def see_commands(self, ctx):
+        if len(self.client.disabled_commands) == 0:
+            return await ctx.send("Tutti i comandi sono abilitati.")
+
+        msg = "I seguenti comandi sono disabilitati:\n"
+        for command in self.client.disabled_commands:
+            msg += f"``{command}``\n"
+        return await ctx.send(msg)
+
+    @commands.command(name='abilita')
+    async def activate_commands(self, ctx, query_command:str):
+        if str(ctx.message.author.id) != self.client.config['owner_id']:
+            return await ctx.send("Non sei autorizzato.")
+
+        command = self.client.get_command(query_command)
+
+        if command:
+            if not command.enabled:
+                command.enabled = True
+                self.client.disabled_commands.remove(query_command)
+                self.client.parser['commands']['disabled'] = json.dumps(self.client.disabled_commands)
+                with open('secret.ini', 'w+') as configfile:
+                    self.client.parser.write(configfile)
+            return await ctx.send(f"Ho abilitato il comando ``{query_command}``.")
+        else:
+            await ctx.send(f"Il comando ``{query_command}`` non esiste.")
+
 
     @commands.command(name='chiudi')
     async def stop(self, ctx):
