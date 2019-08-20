@@ -19,6 +19,7 @@ google-auth-oauthlib = "*"
 google-auth-httplib2 = "*"
 iso8601 = "*"
 italian-dictionary = "*"
+lxml = "*"
 
 [requires]
 python_version = "3.6"
