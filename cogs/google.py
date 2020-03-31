@@ -4,50 +4,12 @@ import rule34 as r34
 import discord
 import wikipedia
 from discord.ext import commands
-from google_images_download import google_images_download
-from italian_dictionary import get_all_data, exceptions
+from italian_dictionary import get_definition
 from random import randrange
-
-response = google_images_download.googleimagesdownload()
-
-
-class GID:
-    """
-    Google Image Downloader
-    """
-    @classmethod
-    def downloader(cls, keyword):
-        opts = {'keywords': keyword,
-                'limit': 1,
-                'output_directory': f"{os.getcwd()}/data/cache/images",
-                'no_directory': True,
-                'delay': 3,
-                'extract-metadata': True,
-                'format': 'jpg'}
-        path = response.download(opts)
-        return path
-
 
 class Google(commands.Cog):
     def __init__(self, client):
         self.client = client
-
-    @commands.command('image')
-    @commands.cooldown(2, 10, commands.BucketType.user)
-    async def image(self, ctx):
-        """
-        Downloads and image from google and sends it to user channel.
-        -----------
-        :param ctx: discord.ext.commands.Context
-        :return: discord.client.message
-        """
-        query = ctx.message.content[7:]
-        async with ctx.typing():
-            path = GID.downloader(query)
-            actual_path = path[query][0]    #path returns a list of images with nested list
-            return await ctx.send("**{}**".format(query), file=discord.File(actual_path))
-
-    # todo text search
 
     @commands.command(name='wiki')
     @commands.cooldown(1, 2, commands.BucketType.user)
@@ -155,7 +117,7 @@ class Google(commands.Cog):
         :return: discord.Client.Message
         """
         try:
-            defs = get_all_data(word)
+            defs = get_definition(word)
             embed = discord.Embed(title=defs['lemma'], url=defs['url'], description=defs['definizione'][0])
             embed.add_field(name="Grammatica", value=defs['grammatica'], inline=True)
             embed.add_field(name="Pronuncia", value=defs['pronuncia'], inline=True)
