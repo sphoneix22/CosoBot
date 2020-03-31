@@ -212,7 +212,7 @@ class Music(commands.Cog):
         try:
             if ctx.message.author.id not in self.skips[ctx.guild.id]:
                 self.skips[ctx.guild.id].append(ctx.message.author.id)
-            if max_limit == len(self.skips[ctx.guild.id]):
+            if max_limit <= len(self.skips[ctx.guild.id]):
                 await ctx.send("Ok, skippo...")
                 del self.skips[ctx.guild.id]
                 ctx.voice_client.stop()
