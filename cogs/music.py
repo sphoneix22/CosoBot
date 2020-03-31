@@ -415,7 +415,7 @@ class Music(commands.Cog):
             return
 
         for ruolo in ctx.message.author.roles:
-            if ruolo.name == "DJ":
+            if ruolo.name == "CosoBot DJ":
                 await ctx.send(f"Ora skippo solo perchè tu sei un DJ, {ctx.message.author.mention}!")
                 await ctx.message.delete()
                 return vc.stop()
@@ -462,7 +462,7 @@ class Music(commands.Cog):
         await ctx.send(f"Ho ricominciato a suonare, {ctx.message.author.mention}")
 
     @commands.command(name='stop')
-    @commands.has_role("DJ")
+    @commands.has_role("CosoBot DJ")
     async def stop_(self, ctx):
         """
         Stops and deletes the player.
@@ -476,6 +476,27 @@ class Music(commands.Cog):
 
         await self.cleanup(ctx.guild)
 
+    @commands.command(name='dj')
+    @commands.is_owner()
+    async def dj_(self, ctx):
+        role = discord.utils.get(ctx.guild.roles, name='CosoBot DJ')
+        if role is None:
+            role = await ctx.guild.create_role(name='CosoBot DJ', colour=discord.Color.orange(), mentionable=True)
+
+        cmd = ctx.message.content[4:]
+        try:
+            id = ctx.message.raw_mentions[0]
+        except IndexError:
+            return await ctx.send("La sintassi di questo comando è: ``,dj add/remove [@user]``")
+
+        if cmd.startswith("add"):
+            await ctx.guild.get_member(id).add_roles(role)
+            await ctx.send(f"<@{id}> è ora un DJ!")
+        elif cmd.startswith("remove"):
+            await ctx.guild.get_member(id).remove_roles(role)
+            await ctx.send(f"<@{id}> non è più un DJ.")
+        else:
+            return await ctx.send("La sintassi di questo comando è: ``,dj add/remove [@user]``")
 
 def setup(bot):
     bot.add_cog(Music(bot=bot))
