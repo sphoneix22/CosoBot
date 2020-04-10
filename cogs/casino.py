@@ -65,7 +65,7 @@ class Casino(commands.Cog):
             return await ctx.send("Sei già registrato!")
 
         await conn.execute(
-            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',0)"
+            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50)"
         )
 
         await conn.close()
@@ -208,12 +208,47 @@ class Casino(commands.Cog):
                     )
                     await sent_embed.edit(embed=embed)
         else:
-            await ctx.send("Non lo so fare ancora :(")
+            embed = Embed(title=f'Roulette | {ctx.author.name}',
+                          description=f"Ok, punti **{bet_amount}€** sui **numeri**. Su che numero punti?\nScrivi un numero da 1 a 36, 0 oppure 00",
+                          color=Colour(0xB5110D))
+            sent_embed = await ctx.send(embed=embed)
 
+
+            def check(m):
+                return (int(m.content) in range(0,37) or m.content == '00') and m.author == ctx.message.author
+
+            choose_number = await self.client.wait_for('message', check=check, timeout=60)
+            embed.description = f"Ok, punti **{bet_amount}€** sul numero {choose_number.content}. Buona fortuna!\nGirando..."
+            embed.set_thumbnail(url="https://media.giphy.com/media/l2SpToqr9rGbGIHHa/giphy.gif")
+
+            await sent_embed.edit(embed=embed)
+
+            numbers = ['00']
+            for i in range(0,37):
+                numbers.append(str(i))
+
+            result = choice(numbers)
+            sleep(3)
+
+            if result == choose_number.content:
+                new_money = user['money'] + bet_amount * 35
+                embed.description = f"Congratulazioni! E' uscito **{numbers}**. Ora hai a disposizione **{new_money}€**"
+                embed.set_thumbnail(url="https://media.giphy.com/media/ADgfsbHcS62Jy/giphy.gif")
+
+                await conn.execute(
+                    f"UPDATE s_{server_id} SET money = {new_money} WHERE user_id = '{ctx.author.id}'"
+                )
+            else:
+                new_money = user['money'] - bet_amount
+                embed.description = f"E' uscito **{bet_amount}**, hai perso. Ora hai a disposizione **{new_money}€**"
+                embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
+
+                await conn.execute(
+                    f"UPDATE s_{server_id} SET money = {new_money} WHERE user_id = '{ctx.author.id}'"
+                )
+
+                await sent_embed.edit(embed=embed)
         return await conn.close()
-
-
-# todo closs conn
 
 
 def setup(client):
