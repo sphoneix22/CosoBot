@@ -11,11 +11,12 @@ from configparser import ConfigParser
 from os import name
 import discord
 import json
+import aiosqlite
 
 from discord.ext import commands
 
 BOT_PREFIX = (";", ',')
-EXTENSION_LIST = ['cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google', 'cogs.music']
+EXTENSION_LIST = ['cogs.error_handler', 'cogs.chat', 'cogs.tournaments', 'cogs.google', 'cogs.music', 'cogs.casino']
 
 client = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -44,6 +45,7 @@ def get_secret():
     client.secrets = dict(config.items('secret'))
     client.config = dict(config.items('config'))
     client.disabled_commands = json.loads(config.get("commands","disabled"))
+    client.db = dict(config.items('db'))
 
 
 def get_flags():
