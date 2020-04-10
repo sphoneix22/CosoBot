@@ -48,7 +48,7 @@ class Chat(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.author.id != 457195507815546880:
+        if ctx.author.id != 457195507815546880: #todo remove this
             content = ctx.content.lower()
             try:
                 if content in risposte_singole.keys():
