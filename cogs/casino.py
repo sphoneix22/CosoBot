@@ -110,7 +110,7 @@ class Casino(commands.Cog):
         bet = await self.client.wait_for('message', check=check, timeout=60)
         bet_amount = float(bet.content)
 
-        if bet_amount > user['money']:
+        if bet_amount > user['money'] or user['money'] == 0:
             await bet.delete()
             await sent_embed.delete()
             return await ctx.send("Non hai abbastanza soldi!")
