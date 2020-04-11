@@ -1,4 +1,5 @@
 import asyncpg
+import datetime
 from numpy.random import choice
 from discord import Embed, Colour
 from discord.ext import commands
@@ -20,7 +21,7 @@ class Casino(commands.Cog):
             f"postgres://{self.client.db['user']}:{self.client.db['password']}@{self.client.db['host']}:5432/cosobot")
 
         await conn.execute(
-            f"CREATE TABLE IF NOT EXISTS s_{server_id} (user_id text PRIMARY KEY, money float)"  # table name: s_ID
+            f"CREATE TABLE IF NOT EXISTS s_{server_id} (user_id text PRIMARY KEY, money float, last_request timestamptz)"  # table name: s_ID
         )
 
         rows = await conn.fetch(
@@ -65,12 +66,43 @@ class Casino(commands.Cog):
             return await ctx.send("Sei già registrato!")
 
         await conn.execute(
-            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50)"
+            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50, '{datetime.datetime.now(tz=datetime.timezone.utc)}')"
         )
 
         await conn.close()
 
         return await ctx.send(f"{ctx.author.mention} adesso sei nel casinò, inizia a giocare!")
+
+    @commands.command(name='soldi')
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def soldi_(self, ctx):
+        server_id = ctx.guild.id
+
+        conn = await asyncpg.connect(
+            f"postgres://{self.client.db['user']}:{self.client.db['password']}@{self.client.db['host']}:5432/cosobot")
+
+        check_table = await conn.fetchrow(
+            f"SELECT to_regclass('cosobot.public.s_{server_id}')"
+        )
+
+        if check_table[0] is None:
+            return await ctx.send("Il casinò non è attivato su questo server! Scrivi ``,casino``")
+
+        user = await conn.fetchrow(
+            f"SELECT * FROM s_{server_id} WHERE public.s_{server_id}.user_id = '{ctx.author.id}'"
+        )
+
+        if user is None:
+            return await ctx.send("Non sei registrato! Scrivi ``,casino_add``")
+
+        if datetime.datetime.now(tz=datetime.timezone.utc) - user['last_request'] >= datetime.timedelta(hours=1):
+            await conn.execute(
+                f"UPDATE s_{server_id} SET money = {user['money'] + 10}, last_request = '{datetime.datetime.now(tz=datetime.timezone.utc)}' WHERE user_id = '{ctx.author.id}'"
+            )
+
+            return await ctx.send("Aggiunti 10€ sul tuo conto. Torna tra un'ora per altri soldi!")
+        else:
+            return await ctx.send("Non è ancora passata un'ora dalla tua ultima richiesta!")
 
     @commands.command(name='roulette')
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -157,7 +189,7 @@ class Casino(commands.Cog):
                 await sleep(3)
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET public.money = {user['money'] - bet_amount} WHERE public.user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount} WHERE user_id = '{ctx.author.id}'"
                 )
                 await sent_embed.edit(embed=embed)
             elif result == 2:
@@ -218,6 +250,7 @@ class Casino(commands.Cog):
                 return (int(m.content) in range(0,37) or m.content == '00') and m.author == ctx.message.author
 
             choose_number = await self.client.wait_for('message', check=check, timeout=60)
+            await choose_number.delete()
             embed.description = f"Ok, punti **{bet_amount}€** sul numero {choose_number.content}. Buona fortuna!\nGirando..."
             embed.set_thumbnail(url="https://media.giphy.com/media/l2SpToqr9rGbGIHHa/giphy.gif")
 
@@ -238,6 +271,8 @@ class Casino(commands.Cog):
                 await conn.execute(
                     f"UPDATE s_{server_id} SET money = {new_money} WHERE user_id = '{ctx.author.id}'"
                 )
+
+                await sent_embed.edit(embed=embed)
             else:
                 new_money = user['money'] - bet_amount
                 embed.description = f"E' uscito **{bet_amount}**, hai perso. Ora hai a disposizione **{new_money}€**"
