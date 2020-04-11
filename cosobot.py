@@ -11,7 +11,6 @@ from configparser import ConfigParser
 from os import name
 import discord
 import json
-import aiosqlite
 
 from discord.ext import commands
 
