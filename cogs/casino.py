@@ -269,7 +269,7 @@ class Casino(commands.Cog):
                 numbers.append(str(i))
 
             result = choice(numbers)
-            sleep(3)
+            await sleep(3)
 
             if result == choose_number.content:
                 new_money = user['money'] + bet_amount * 35
