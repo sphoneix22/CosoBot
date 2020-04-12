@@ -21,7 +21,7 @@ class Casino(commands.Cog):
             f"postgres://{self.client.db['user']}:{self.client.db['password']}@{self.client.db['host']}:5432/cosobot")
 
         await conn.execute(
-            f"CREATE TABLE IF NOT EXISTS s_{server_id} (user_id text PRIMARY KEY, money float, last_request timestamptz)"  # table name: s_ID
+            f"CREATE TABLE IF NOT EXISTS s_{server_id} (user_id text PRIMARY KEY, money float, last_request timestamptz, wins integer, losses integer)"  # table name: s_ID
         )
 
         rows = await conn.fetch(
@@ -34,7 +34,8 @@ class Casino(commands.Cog):
 
         if len(rows) != 0:
             for entry in rows:
-                embed.add_field(name=f"**{self.client.get_user(int(entry['user_id']))}**", value=f"{entry['money']}€",
+                total_plays = entry['wins'] + entry['losses']
+                embed.add_field(name=f"**{self.client.get_user(int(entry['user_id']))}**", value=f"**{entry['money']}€** Winrate {round((entry['wins']/total_plays),2)*100}%",
                                 inline=True)
         else:
             embed.add_field(name='**Che noia!**', value='Il casinò è vuoto!')
@@ -66,7 +67,7 @@ class Casino(commands.Cog):
             return await ctx.send("Sei già registrato!")
 
         await conn.execute(
-            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50, '{datetime.datetime.now(tz=datetime.timezone.utc)}')"
+            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50, '{datetime.datetime.now(tz=datetime.timezone.utc)}',0,0)"
         )
 
         await conn.close()
@@ -189,7 +190,7 @@ class Casino(commands.Cog):
                 await sleep(3)
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount} WHERE user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses']+1} WHERE user_id = '{ctx.author.id}'"
                 )
                 await sent_embed.edit(embed=embed)
             elif result == 2:
@@ -198,7 +199,7 @@ class Casino(commands.Cog):
                 await sleep(3)
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount} WHERE user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses']+1} WHERE user_id = '{ctx.author.id}'"
                 )
                 await sent_embed.edit(embed=embed)
             elif result == 1:
@@ -208,7 +209,7 @@ class Casino(commands.Cog):
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] + bet_amount} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] + bet_amount}, wins = {user['wins']+1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
                 else:
@@ -217,7 +218,7 @@ class Casino(commands.Cog):
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses']+1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
             else:
@@ -227,7 +228,7 @@ class Casino(commands.Cog):
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] + bet_amount} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] + bet_amount}, wins = {user['wins']+1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
                 else:
@@ -236,7 +237,7 @@ class Casino(commands.Cog):
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses']+1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
         else:
@@ -269,7 +270,7 @@ class Casino(commands.Cog):
                 embed.set_thumbnail(url="https://media.giphy.com/media/ADgfsbHcS62Jy/giphy.gif")
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET money = {new_money} WHERE user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {new_money}, wins = {user['wins']+1} WHERE user_id = '{ctx.author.id}'"
                 )
 
                 await sent_embed.edit(embed=embed)
@@ -279,7 +280,7 @@ class Casino(commands.Cog):
                 embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET money = {new_money} WHERE user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {new_money}, losses = {user['losses']+1} WHERE user_id = '{ctx.author.id}'"
                 )
 
                 await sent_embed.edit(embed=embed)
