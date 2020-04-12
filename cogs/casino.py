@@ -265,7 +265,7 @@ class Casino(commands.Cog):
 
             if result == choose_number.content:
                 new_money = user['money'] + bet_amount * 35
-                embed.description = f"Congratulazioni! E' uscito **{numbers}**. Ora hai a disposizione **{new_money}€**"
+                embed.description = f"Congratulazioni! E' uscito **{result}**. Ora hai a disposizione **{new_money}€**"
                 embed.set_thumbnail(url="https://media.giphy.com/media/ADgfsbHcS62Jy/giphy.gif")
 
                 await conn.execute(
@@ -275,7 +275,7 @@ class Casino(commands.Cog):
                 await sent_embed.edit(embed=embed)
             else:
                 new_money = user['money'] - bet_amount
-                embed.description = f"E' uscito **{bet_amount}**, hai perso. Ora hai a disposizione **{new_money}€**"
+                embed.description = f"E' uscito **{result}**, hai perso. Ora hai a disposizione **{new_money}€**"
                 embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
 
                 await conn.execute(
