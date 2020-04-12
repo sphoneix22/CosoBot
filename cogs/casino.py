@@ -107,9 +107,11 @@ class Casino(commands.Cog):
                 f"UPDATE s_{server_id} SET money = {user['money'] + 10}, last_request = '{datetime.datetime.now(tz=datetime.timezone.utc)}' WHERE user_id = '{ctx.author.id}'"
             )
 
-            return await ctx.send("Aggiunti 10€ sul tuo conto. Torna tra un'ora per altri soldi!")
+            await ctx.send("Aggiunti 10€ sul tuo conto. Torna tra un'ora per altri soldi!")
         else:
-            return await ctx.send("Non è ancora passata un'ora dalla tua ultima richiesta!")
+            await ctx.send("Non è ancora passata un'ora dalla tua ultima richiesta!")
+
+        return await conn.close()
 
     @commands.command(name='roulette')
     @commands.cooldown(1, 10, commands.BucketType.user)
