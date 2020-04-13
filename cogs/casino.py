@@ -3,11 +3,12 @@ import datetime
 from numpy.random import choice
 from discord import Embed, Colour
 from discord.ext import commands
+from discord import utils
 from asyncio import sleep
 from random import randint
 from decimal import getcontext, Decimal
 
-getcontext().prec = 3  # setting precision for decimal values 
+getcontext().prec = 3  # setting precision for decimal values
 
 
 class Casino(commands.Cog):
@@ -24,7 +25,8 @@ class Casino(commands.Cog):
             f"postgres://{self.client.db['user']}:{self.client.db['password']}@{self.client.db['host']}:5432/cosobot")
 
         await conn.execute(
-            f"CREATE TABLE IF NOT EXISTS s_{server_id} (user_id text PRIMARY KEY, money float, last_request timestamptz, wins integer, losses integer)"
+            f"CREATE TABLE IF NOT EXISTS s_{server_id} (user_id text PRIMARY KEY, money float, last_request timestamptz,"
+            f" wins integer, losses integer, dj_end timestamptz)"
             # table name: s_ID
         )
 
@@ -76,7 +78,7 @@ class Casino(commands.Cog):
             return await ctx.send("Sei già registrato!")
 
         await conn.execute(
-            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50, '{datetime.datetime.now(tz=datetime.timezone.utc)}',0,0)"
+            f"INSERT INTO s_{server_id} VALUES ('{ctx.author.id}',50, '{datetime.datetime.now(tz=datetime.timezone.utc)}',0,0, null)"
         )
 
         await conn.close()
@@ -295,6 +297,59 @@ class Casino(commands.Cog):
 
                 await sent_embed.edit(embed=embed)
         return await conn.close()
+
+    @commands.command(name='shop')
+    async def shop_(self, ctx):
+        server_id = ctx.guild.id
+
+        conn = await asyncpg.connect(
+            f"postgres://{self.client.db['user']}:{self.client.db['password']}@{self.client.db['host']}:5432/cosobot")
+
+        check_table = await conn.fetchrow(
+            f"SELECT to_regclass('cosobot.public.s_{server_id}')"
+        )
+
+        if check_table[0] is None:
+            return await ctx.send("Il casinò non è attivato su questo server! Scrivi ``,casino``")
+
+        user = await conn.fetchrow(
+            f"SELECT * FROM s_{server_id} WHERE public.s_{server_id}.user_id = '{ctx.author.id}'"
+        )
+
+        if user is None:
+            return await ctx.send("Non sei registrato! Scrivi ``,casino_add``")
+
+        embed = Embed(title=f"Shop | {ctx.author.name}'",
+                      description=f"Spendi, paga, sborsa.\nHai a disposizione {user['money']}€")
+        embed.add_field(name='1 - DJ per un giorno', value='200€', inline=True)
+        sent_embed = await ctx.send(embed=embed)
+
+        reactions = {"\U00000031\U000020e3": 1}
+        for rec in reactions.keys():
+            await sent_embed.add_reaction(rec)
+
+        def check(reaction, user):
+            return str(
+                reaction) in reactions.keys() and user == ctx.message.author and reaction.message.id == sent_embed.id
+
+        choose, user_msg = await self.client.wait_for('reaction_add', check=check, timeout=60)
+
+        if reactions[str(choose)] == 1:
+            if user['money'] >= 200:
+                role = utils.get(ctx.guild.roles, name='CosoBot DJ')
+                if role is None:
+                    await ctx.send("Non esiste il ruolo DJ su questo server, chiama il mio padrone.")
+                else:
+                    await ctx.guild.get_member(int(user['user_id'])).add_roles(role)
+                    await conn.execute(
+                        f"UPDATE s_{server_id} SET dj_end = '{datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=1)}',"
+                        f" money = {user['money'] - 200}"
+                    )
+                    await ctx.send(f"Goditi questa giornata di DJ! Il tuo nuovo saldo è {user['money'] - 200}€")
+            else:
+                await ctx.send("Non hai abbastanza soldi!")
+
+            return await conn.close()
 
 
 def setup(client):

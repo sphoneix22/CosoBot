@@ -7,6 +7,8 @@ import os
 import random
 import shutil
 import time
+import datetime
+import asyncpg
 from configparser import ConfigParser
 from os import name
 import discord
@@ -29,6 +31,11 @@ def main():
         exit(0)
     get_secret()
 
+    client.loop.create_task(servers())
+    client.loop.create_task(game())
+    client.loop.create_task(cleaner())
+    client.loop.create_task(dj_loop())
+
     for to_be_disabled_command in client.disabled_commands:
         command = client.get_command(to_be_disabled_command)
         command.enabled = False
@@ -43,7 +50,7 @@ def get_secret():
     client.parser = config
     client.secrets = dict(config.items('secret'))
     client.config = dict(config.items('config'))
-    client.disabled_commands = json.loads(config.get("commands","disabled"))
+    client.disabled_commands = json.loads(config.get("commands", "disabled"))
     client.db = dict(config.items('db'))
 
 
@@ -150,9 +157,37 @@ async def game():
         await asyncio.sleep(1000)
 
 
-client.loop.create_task(servers())
-client.loop.create_task(game())
-client.loop.create_task(cleaner())
+@client.event  # NON SI CAPISCE NULLA MA FUNZIONA
+async def dj_loop():
+    await client.wait_until_ready()
+    while not client.is_closed():
+        conn = await asyncpg.connect(
+            f"postgres://{client.db['user']}:{client.db['password']}@{client.db['host']}:5432/cosobot")
+
+        tables = await conn.fetch(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type = 'BASE TABLE'")
+
+        if len(tables) == 0:
+            await conn.close()
+            await asyncio.sleep(120)
+        else:
+            for table in tables:
+                dj_ends = await conn.fetch(
+                    f"SELECT user_id, dj_end FROM {table['table_name']} WHERE dj_end IS NOT NULL")
+                if not len(dj_ends) == 0:
+                    now = datetime.datetime.now(tz=datetime.timezone.utc)
+                    server = client.get_guild(int(table['table_name'].split('_')[1]))
+                    role = discord.utils.get(server.roles, name="CosoBot DJ")
+                    for rec in dj_ends:
+                        if now > rec['dj_end']:
+                            user_dsc = server.get_member(int(rec['user_id']))
+                            await user_dsc.remove_roles(role)
+                            await conn.execute(
+                                f"UPDATE {table['table_name']} SET dj_end = null WHERE user_id = '{rec['user_id']}'")
+
+            await conn.close()
+            await asyncio.sleep(120)
+
 
 if __name__ == '__main__':
     main()
