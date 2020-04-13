@@ -107,14 +107,16 @@ class Casino(commands.Cog):
         if user is None:
             return await ctx.send("Non sei registrato! Scrivi ``,casino_add``")
 
-        if datetime.datetime.now(tz=datetime.timezone.utc) - user['last_request'] >= datetime.timedelta(day=1):
+        diff = datetime.datetime.now(tz=datetime.timezone.utc) - user['last_request']
+        if diff >= datetime.timedelta(days=1):
             await conn.execute(
                 f"UPDATE s_{server_id} SET money = {user['money'] + 10}, last_request = '{datetime.datetime.now(tz=datetime.timezone.utc)}' WHERE user_id = '{ctx.author.id}'"
             )
 
             await ctx.send("Aggiunti 10€ sul tuo conto. Torna domani per altri soldi!")
         else:
-            await ctx.send("Non è ancora passato un giorno dalla tua ultima richiesta!")
+            s_left = 86400-diff.seconds
+            await ctx.send(f"Non è ancora passato un giorno dalla tua ultima richiesta! Mancano {int(s_left/3600)} ore.")
 
         return await conn.close()
 
