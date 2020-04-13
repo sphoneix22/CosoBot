@@ -40,3 +40,4 @@ wikipedia==1.4.0
 yarl==1.4.2
 youtube-dl==2020.3.24
 numpy==1.18.2
+asyncpg==0.20.1
