@@ -5,6 +5,9 @@ from discord import Embed, Colour
 from discord.ext import commands
 from asyncio import sleep
 from random import randint
+from decimal import getcontext, Decimal
+
+getcontext().prec = 3  # setting precision for decimal values 
 
 
 class Casino(commands.Cog):
@@ -37,7 +40,7 @@ class Casino(commands.Cog):
             for entry in rows:
                 total_plays = entry['wins'] + entry['losses']
                 try:
-                    winrate = f"{round((entry['wins'] / total_plays), 2) * 100}%"
+                    winrate = f"{Decimal(entry['wins'] / total_plays) * 100}%"
                 except ZeroDivisionError:
                     winrate = 'N/D'
                 embed.add_field(name=f"**{self.client.get_user(int(entry['user_id']))}**",
