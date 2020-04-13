@@ -116,7 +116,13 @@ class Casino(commands.Cog):
             await ctx.send("Aggiunti 10€ sul tuo conto. Torna domani per altri soldi!")
         else:
             s_left = 86400-diff.seconds
-            await ctx.send(f"Non è ancora passato un giorno dalla tua ultima richiesta! Mancano {int(s_left/3600)} ore.")
+            hours = int(s_left/3660)
+            if hours > 1:
+                 await ctx.send(f"Non è ancora passato un giorno dalla tua ultima richiesta! Mancano {int(s_left/3600)} ore.")
+            elif hours == 1:
+                await ctx.send(f"Non è ancora passato un giorno dalla tua ultima richiesta! Manca un'ora.")
+            else:
+                await ctx.send(f"Non è ancora passato un giorno dalla tua ultima richiesta! Manca meno di un'ora")
 
         return await conn.close()
 
