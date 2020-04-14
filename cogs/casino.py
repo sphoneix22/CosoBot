@@ -327,7 +327,7 @@ class Casino(commands.Cog):
         if user is None:
             return await ctx.send("Non sei registrato! Scrivi ``,casino_add``")
 
-        embed = Embed(title=f"Shop | {ctx.author.name}'",
+        embed = Embed(title=f"Shop | {ctx.author.name}",
                       description=f"Spendi, paga, sborsa.\nHai a disposizione {user['money']}€")
         embed.add_field(name='1 - DJ per un giorno', value='200€', inline=True)
         sent_embed = await ctx.send(embed=embed)
