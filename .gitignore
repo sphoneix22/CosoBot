@@ -1,5 +1,6 @@
 
 \.idea/
+.vscode/
 test.py
 secret.ini
 data/cache/*
