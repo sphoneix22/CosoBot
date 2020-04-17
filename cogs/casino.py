@@ -162,7 +162,7 @@ class Casino(commands.Cog):
                 return sep[0].isdigit() and m.author == ctx.author
 
         bet = await self.client.wait_for('message', check=check, timeout=60)
-        bet_amount = float(bet.content)
+        bet_amount = Decimal(bet.content)
 
         if bet_amount > user['money'] or user['money'] == 0:
             await bet.delete()
@@ -206,59 +206,59 @@ class Casino(commands.Cog):
             result = choice([0, 1, 2, 3], p=[18 / 38, 18 / 38, 1 / 38, 1 / 38])  # black=0, red=1, zero=2, double zero=3
 
             if result == 3:
-                embed.description = f"E' uscito il doppio zero, vince il banco. Adesso hai a disposizione **{user['money'] - bet_amount}€**"
+                embed.description = f"E' uscito il doppio zero, vince il banco. Adesso hai a disposizione **{user['money'] - float(bet_amount)}€**"
                 embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
                 await sleep(3)
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {user['money'] - float(bet_amount)}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
                 )
                 await sent_embed.edit(embed=embed)
             elif result == 2:
-                embed.description = f"E' uscito lo zero, vince il banco. Adesso hai a disposizione **{user['money'] - bet_amount}€**"
+                embed.description = f"E' uscito lo zero, vince il banco. Adesso hai a disposizione **{user['money'] - float(bet_amount)}€**"
                 embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
                 await sleep(3)
 
                 await conn.execute(
-                    f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
+                    f"UPDATE s_{server_id} SET money = {user['money'] - float(bet_amount)}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
                 )
                 await sent_embed.edit(embed=embed)
             elif result == 1:
                 if reactions[str(color_choose)] == 'rosso':
-                    embed.description = f"E' uscito rosso, hai vinto! Adesso hai a disposizione **{user['money'] + bet_amount}€**"
+                    embed.description = f"E' uscito rosso, hai vinto! Adesso hai a disposizione **{user['money'] + float(bet_amount)}€**"
                     embed.set_thumbnail(url="https://media.giphy.com/media/ADgfsbHcS62Jy/giphy.gif")
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] + bet_amount}, wins = {user['wins'] + 1} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] + float(bet_amount)}, wins = {user['wins'] + 1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
                 else:
-                    embed.description = f"E' uscito rosso, hai perso. Adesso hai a disposizione **{user['money'] - bet_amount}€**"
+                    embed.description = f"E' uscito rosso, hai perso. Adesso hai a disposizione **{user['money'] - float(bet_amount)}€**"
                     embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] - float(bet_amount)}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
             else:
                 if reactions[str(color_choose)] == 'nero':
-                    embed.description = f"E' uscito nero, hai vinto! Adesso hai a disposizione **{user['money'] + bet_amount}€**"
+                    embed.description = f"E' uscito nero, hai vinto! Adesso hai a disposizione **{user['money'] + float(bet_amount)}€**"
                     embed.set_thumbnail(url="https://media.giphy.com/media/ADgfsbHcS62Jy/giphy.gif")
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] + bet_amount}, wins = {user['wins'] + 1} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] + float(bet_amount)}, wins = {user['wins'] + 1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
                 else:
-                    embed.description = f"E' uscito nero, hai perso. Adesso hai a disposizione **{user['money'] - bet_amount}€**"
+                    embed.description = f"E' uscito nero, hai perso. Adesso hai a disposizione **{user['money'] - float(bet_amount)}€**"
                     embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
                     await sleep(3)
 
                     await conn.execute(
-                        f"UPDATE s_{server_id} SET money = {user['money'] - bet_amount}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
+                        f"UPDATE s_{server_id} SET money = {user['money'] - float(bet_amount)}, losses = {user['losses'] + 1} WHERE user_id = '{ctx.author.id}'"
                     )
                     await sent_embed.edit(embed=embed)
         else:
@@ -285,7 +285,7 @@ class Casino(commands.Cog):
             await sleep(3)
 
             if result == choose_number.content:
-                new_money = user['money'] + bet_amount * 35
+                new_money = user['money'] + float(bet_amount) * 35
                 embed.description = f"Congratulazioni! E' uscito **{result}**. Ora hai a disposizione **{new_money}€**"
                 embed.set_thumbnail(url="https://media.giphy.com/media/ADgfsbHcS62Jy/giphy.gif")
 
@@ -295,7 +295,7 @@ class Casino(commands.Cog):
 
                 await sent_embed.edit(embed=embed)
             else:
-                new_money = user['money'] - bet_amount
+                new_money = user['money'] - float(bet_amount)
                 embed.description = f"E' uscito **{result}**, hai perso. Ora hai a disposizione **{new_money}€**"
                 embed.set_thumbnail(url="https://media.giphy.com/media/YJjvTqoRFgZaM/giphy.gif")
 
