@@ -29,7 +29,7 @@ class CommandErrorHandler(commands.Cog):
                 await ctx.send(
                     "C'è stato un errore nel download.")
                 return await self.client.get_user(int(self.client.config['owner_id'])).send(
-                    f"Hey! Si è verificato un errore durante il download di una canzone.")
+                    f"Hey! Si è verificato un errore durante il download di una canzone.\n{error}")
 
 
 def setup(client):
