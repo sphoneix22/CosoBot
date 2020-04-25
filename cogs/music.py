@@ -499,5 +499,10 @@ class Music(commands.Cog):
         else:
             return await ctx.send("La sintassi di questo comando è: ``,dj add/remove [@user]``")
 
+    @commands.command(name="cache")
+    @commands.is_owner()
+    async def cache_delete(self, ctx):
+        return ytdl.cache.remove()
+
 def setup(bot):
     bot.add_cog(Music(bot=bot))
