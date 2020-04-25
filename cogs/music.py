@@ -343,6 +343,7 @@ class Music(commands.Cog):
         await self.play(ctx, silent=True)
 
     @commands.command(name='volume', aliases=['vol'])
+    @commands.has_role("CosoBot DJ")
     async def volume_(self, ctx, volume: float):
         if not ctx.guild.voice_client.is_connected():
             return
