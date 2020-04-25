@@ -15,7 +15,7 @@ API_V = 'v3'
 ytdl_opts = {
     "format": "bestaudio/best",
     "outtmpl": "./data/cache/music/%(extractor)s-%(id)s.%(ext)s",
-    "quiet": True
+    "quiet": False
 }
 
 ytdl = YoutubeDL(ytdl_opts)
