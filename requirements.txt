@@ -38,6 +38,6 @@ urllib3==1.25.8
 websockets==8.1
 wikipedia==1.4.0
 yarl==1.4.2
-youtube-dl==2020.3.24
+youtube-dl==2020.5.29
 numpy==1.18.2
 asyncpg==0.20.1
