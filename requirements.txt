@@ -20,7 +20,7 @@ idna==2.9
 idna-ssl==1.1.0
 iso8601==0.1.12
 italian-dictionary==1.2
-lxml==4.6.2
+lxml==4.6.3
 multidict==4.7.5
 numpy==1.18.2
 oauth2client==4.1.3
